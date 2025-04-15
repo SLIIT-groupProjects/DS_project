@@ -63,6 +63,17 @@ export const acceptOrder = async (req, res) => {
         res.status(500).json({ message: 'Server error', error: err.message });
     }
 };
+export const getMyAssignedOrders = async (req, res) => {
+    try {
+        const assignedOrders = await AssignedOrder.find({
+            deliveryPerson: req.user._id,
+            status: { $in: ['accepted', 'pickedUp'] }
+        });
+        res.status(200).json({ orders: assignedOrders });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error', error: err.message });
+    }
+};
 
 
 // Update status (e.g., pickedUp, delivered)
@@ -88,6 +99,26 @@ export const updateOrderStatus = async (req, res) => {
 
         res.status(200).json({ message: 'Order status updated', order });
 
+    } catch (err) {
+        res.status(500).json({ message: 'Server error', error: err.message });
+    }
+};
+
+export const completeOrder = async (req, res) => {
+    try {
+        const order = await AssignedOrder.findById(req.params.orderId);
+
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+
+        // Make sure this delivery person owns the order
+        if (String(order.deliveryPerson) !== String(req.user._id)) {
+            return res.status(403).json({ message: 'Unauthorized' });
+        }
+
+        order.status = 'delivered';
+        await order.save();
+
+        res.status(200).json({ message: 'Order marked as delivered', order });
     } catch (err) {
         res.status(500).json({ message: 'Server error', error: err.message });
     }

@@ -13,34 +13,64 @@ const DeliveryDashboard = () => {
 
   const fetchInitialOrders = async () => {
     try {
-      const res = await fetch("http://localhost:5002/api/delivery/orders", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
+      const resAssigned = await fetch(
+        "http://localhost:5002/api/delivery/assigned",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-      if (res.ok) {
-        // const fetchedAssigned = data.orders.filter(
-        //   (o) => o.status !== "pending"
-        // );
-        const fetchedUnassigned = data.orders.filter(
-          (o) => o.status === "pending"
-        );
+      const resNearby = await fetch(
+        "http://localhost:5002/api/delivery/orders",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-        // Load accepted orders from localStorage
-        const localAccepted =
-          JSON.parse(localStorage.getItem(ACCEPTED_STORAGE_KEY)) || [];
+      const dataAssigned = await resAssigned.json();
+      const dataNearby = await resNearby.json();
 
-        setOrders(fetchedUnassigned);
-        setAssignedOrders(localAccepted);
-
-        // Reverse geocode everything once
-        reverseGeocodeAll([...fetchedUnassigned, ...localAccepted]);
+      if (resAssigned.ok && resNearby.ok) {
+        setAssignedOrders(dataAssigned.orders);
+        const nearby = dataNearby.orders.filter((o) => o.status === "pending");
+        setOrders(nearby);
+        reverseGeocodeAll([...dataAssigned.orders, ...nearby]);
       }
     } catch (err) {
       console.error(err);
-      alert("Error loading orders");
     }
   };
+
+  // const fetchInitialOrders = async () => {
+  //   try {
+  //     const res = await fetch("http://localhost:5002/api/delivery/orders", {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     });
+  //     const data = await res.json();
+
+  //     if (res.ok) {
+  //       // const fetchedAssigned = data.orders.filter(
+  //       //   (o) => o.status !== "pending"
+  //       // );
+  //       const fetchedUnassigned = data.orders.filter(
+  //         (o) => o.status === "pending"
+  //       );
+
+  //       // Load accepted orders from localStorage
+  //       const localAccepted =
+  //         JSON.parse(localStorage.getItem(ACCEPTED_STORAGE_KEY)) || [];
+
+  //       setOrders(fetchedUnassigned);
+  //       setAssignedOrders(localAccepted);
+
+  //       // Reverse geocode everything once
+  //       reverseGeocodeAll([...fetchedUnassigned, ...localAccepted]);
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("Error loading orders");
+  //   }
+  // };
 
   const fetchNearbyOrders = async () => {
     try {
@@ -127,29 +157,63 @@ const DeliveryDashboard = () => {
       cancelButtonText: "Cancel",
       confirmButtonColor: "#16a34a",
       cancelButtonColor: "#6b7280",
-    }).then((result) => {
-      //remove from UI
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        setAssignedOrders((prev) =>
-          prev.filter((order) => order._id !== orderId)
-        );
+        try {
+          const res = await fetch(
+            `http://localhost:5002/api/delivery/${orderId}/complete`,
+            {
+              method: "PATCH",
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          const data = await res.json();
 
-        // Also remove from localStorage
-        const saved =
-          JSON.parse(localStorage.getItem(ACCEPTED_STORAGE_KEY)) || [];
-        const updated = saved.filter((order) => order._id !== orderId);
-        localStorage.setItem(ACCEPTED_STORAGE_KEY, JSON.stringify(updated));
+          if (res.ok) {
+            setAssignedOrders((prev) =>
+              prev.filter((order) => order._id !== orderId)
+            );
 
-        Swal.fire({
-          icon: "success",
-          title: "Order Completed!",
-          text: "The order has been marked as completed.",
-          timer: 2000,
-          showConfirmButton: false,
-        });
+            Swal.fire({
+              icon: "success",
+              title: "Order Completed!",
+              text: "The order has been marked as delivered.",
+              timer: 2000,
+              showConfirmButton: false,
+            });
+          } else {
+            Swal.fire("Error", data.message || "Failed to complete", "error");
+          }
+        } catch (err) {
+          Swal.fire("Error", "Server error", "error");
+        }
       }
     });
   };
+
+  //   .then((result) => {
+  //     //remove from UI
+  //     if (result.isConfirmed) {
+  //       setAssignedOrders((prev) =>
+  //         prev.filter((order) => order._id !== orderId)
+  //       );
+
+  //       // Also remove from localStorage
+  //       const saved =
+  //         JSON.parse(localStorage.getItem(ACCEPTED_STORAGE_KEY)) || [];
+  //       const updated = saved.filter((order) => order._id !== orderId);
+  //       localStorage.setItem(ACCEPTED_STORAGE_KEY, JSON.stringify(updated));
+
+  //       Swal.fire({
+  //         icon: "success",
+  //         title: "Order Completed!",
+  //         text: "The order has been marked as completed.",
+  //         timer: 2000,
+  //         showConfirmButton: false,
+  //       });
+  //     }
+  //   });
+  // };
   useEffect(() => {
     fetchInitialOrders();
 
