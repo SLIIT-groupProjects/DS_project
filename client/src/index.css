@@ -1,0 +1,173 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  @apply bg-gray-50;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Custom component classes */
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-md font-medium transition-colors duration-200;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary-600 text-white hover:bg-secondary-700 focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2;
+  }
+  
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+  }
+  
+  .btn-outline {
+    @apply border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-md overflow-hidden transition-shadow duration-300 hover:shadow-lg;
+  }
+  
+  .card-header {
+    @apply p-4 border-b border-gray-200;
+  }
+  
+  .card-body {
+    @apply p-4;
+  }
+  
+  .form-input {
+    @apply mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500;
+  }
+  
+  .form-label {
+    @apply block text-sm font-medium text-gray-700;
+  }
+  
+  .form-error {
+    @apply text-red-500 text-sm mt-1;
+  }
+  
+  .status-badge {
+    @apply px-2 py-1 rounded-full text-xs font-medium;
+  }
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-custom {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Timeline styling */
+.timeline-track {
+  @apply absolute inset-0 flex items-center;
+}
+
+.timeline-track-line {
+  @apply h-0.5 w-full bg-gray-200;
+}
+
+.timeline-point {
+  @apply relative flex h-8 w-8 items-center justify-center rounded-full;
+}
+
+.timeline-point-complete {
+  @apply bg-primary-600;
+}
+
+.timeline-point-incomplete {
+  @apply bg-gray-300;
+}
+
+.timeline-point-current {
+  @apply ring-2 ring-primary-600 ring-offset-2;
+}
+
+.timeline-label {
+  @apply mt-2 text-xs;
+}
+
+.timeline-label-complete {
+  @apply text-primary-600 font-medium;
+}
+
+.timeline-label-incomplete {
+  @apply text-gray-500;
+}
+
+/* Order status pill colors, enhancing the existing getOrderStatusColor function */
+.status-pending {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.status-confirmed {
+  @apply bg-blue-100 text-blue-800;
+}
+
+.status-preparing {
+  @apply bg-purple-100 text-purple-800;
+}
+
+.status-ready {
+  @apply bg-green-100 text-green-800;
+}
+
+.status-delivered {
+  @apply bg-gray-100 text-gray-800;
+}
+
+.status-cancelled {
+  @apply bg-red-100 text-red-800;
+}
+
+/* Loading animation */
+.loader {
+  @apply border-t-4 border-primary-500 rounded-full animate-spin;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-width: 0.25rem;
+  border-color: #e5e7eb;
+}
+
+/* Transitions for interactive elements */
+.menu-item {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+.menu-item:hover {
+  @apply transform translate-y-[-2px];
+}
+
+/* Dashboard card styles */
+.dashboard-card {
+  @apply bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300;
+}
+
+/* Restaurant status toggle switch */
+.toggle-switch {
+  @apply relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500;
+}

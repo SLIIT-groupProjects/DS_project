@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:5.0
+    volumes:
+      - restaurant-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+
+  server:
+    build: ./server
+    ports:
+      - "5002:5002"
+    environment:
+      MONGODB_URI: mongodb://root:example@mongodb:27017/restaurant-service?authSource=admin
+      JWT_SECRET: your_jwt_secret_key
+    depends_on:
+      - mongodb
+
+volumes:
+  restaurant-data:
