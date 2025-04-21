@@ -1,11 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-    content: [
-        "./index.html",
-        "./src/**/*.{js,ts,jsx,tsx}",
-    ],
-    theme: {
-        extend: {},
+  content: ["./src/**/*.{js,jsx,ts,tsx}"],
+  theme: {
+    extend: {
+      backgroundImage: {
+        'custom-bg': "url('https://res.cloudinary.com/fmart/image/upload/v1743648804/BGImage02_hzx5in.png')",
+      },
     },
-    plugins: [],
-}
+  },
+  plugins: [],
+};
