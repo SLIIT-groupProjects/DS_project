@@ -121,7 +121,7 @@ export default function App() {
           <Route 
             path="/create-restaurant" 
             element={
-              <ProtectedRoute isAllowed={isRestaurantOwner()}>
+              <ProtectedRoute isAllowed={isRestaurantOwner() || isAdmin()}>
                 <CreateRestaurantPage />
               </ProtectedRoute>
             } 

@@ -437,8 +437,8 @@ const AdminDashboardPage = () => {
           <Link to="/admin/users" className="btn btn-primary text-center">
             Manage Users
           </Link>
-          <Link to="/admin/restaurants" className="btn btn-secondary text-center">
-            Manage Restaurants
+          <Link to="/create-restaurant" className="btn btn-secondary text-center">
+            Create Restaurant
           </Link>
           <Link to="/admin/orders" className="btn btn-outline text-center">
             View All Orders
