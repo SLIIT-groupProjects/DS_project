@@ -2,7 +2,7 @@
 export default {
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
-    "./public/index.html",
+    "./public/index.html"
   ],
   theme: {
     extend: {
@@ -20,7 +20,6 @@ export default {
           900: '#0c4a6e',
           950: '#082f49',
         },
-        
         secondary: {
           50: '#f5f3ff',
           100: '#ede9fe',
@@ -34,6 +33,9 @@ export default {
           900: '#4c1d95',
           950: '#2e1065',
         },
+      },
+      backgroundImage: {
+        'custom-bg': "url('https://res.cloudinary.com/fmart/image/upload/v1743648804/BGImage02_hzx5in.png')",
       },
     },
   },
