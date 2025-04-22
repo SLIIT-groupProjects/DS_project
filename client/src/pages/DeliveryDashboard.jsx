@@ -1,0 +1,315 @@
+import React, { useEffect, useState } from "react";
+import Swal from "sweetalert2";
+import { reverseGeocode } from "../../../server/utils/reverseGeoCode";
+
+const DeliveryDashboard = () => {
+  const [orders, setOrders] = useState([]);
+  const [assignedOrders, setAssignedOrders] = useState([]);
+  const [orderAddresses, setOrderAddresses] = useState([]);
+
+  const ACCEPTED_STORAGE_KEY = "acceptedOrders";
+
+  const token = localStorage.getItem("token");
+
+  const fetchInitialOrders = async () => {
+    try {
+      const resAssigned = await fetch(
+        "http://localhost:5002/api/delivery/assigned",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const resNearby = await fetch(
+        "http://localhost:5002/api/delivery/orders",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const dataAssigned = await resAssigned.json();
+      const dataNearby = await resNearby.json();
+
+      if (resAssigned.ok && resNearby.ok) {
+        setAssignedOrders(dataAssigned.orders);
+        const nearby = dataNearby.orders.filter((o) => o.status === "pending");
+        setOrders(nearby);
+        reverseGeocodeAll([...dataAssigned.orders, ...nearby]);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // const fetchInitialOrders = async () => {
+  //   try {
+  //     const res = await fetch("http://localhost:5002/api/delivery/orders", {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     });
+  //     const data = await res.json();
+
+  //     if (res.ok) {
+  //       // const fetchedAssigned = data.orders.filter(
+  //       //   (o) => o.status !== "pending"
+  //       // );
+  //       const fetchedUnassigned = data.orders.filter(
+  //         (o) => o.status === "pending"
+  //       );
+
+  //       // Load accepted orders from localStorage
+  //       const localAccepted =
+  //         JSON.parse(localStorage.getItem(ACCEPTED_STORAGE_KEY)) || [];
+
+  //       setOrders(fetchedUnassigned);
+  //       setAssignedOrders(localAccepted);
+
+  //       // Reverse geocode everything once
+  //       reverseGeocodeAll([...fetchedUnassigned, ...localAccepted]);
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("Error loading orders");
+  //   }
+  // };
+
+  const fetchNearbyOrders = async () => {
+    try {
+      const res = await fetch("http://localhost:5002/api/delivery/orders", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        const nearby = data.orders.filter((o) => o.status === "pending");
+        setOrders(nearby);
+
+        // Refresh addresses only for nearby + already assigned
+        reverseGeocodeAll([...nearby, ...assignedOrders]);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const reverseGeocodeAll = async (orderList) => {
+    const addressMap = {};
+
+    for (const order of orderList) {
+      const { lat, lng } = order.customerLocation;
+      const address = await reverseGeocode(lat, lng);
+      addressMap[order._id] = address;
+    }
+
+    setOrderAddresses((prev) => ({ ...prev, ...addressMap }));
+  };
+
+  const handleAccept = async (orderId) => {
+    try {
+      const res = await fetch(
+        `http://localhost:5002/api/delivery/orders/${orderId}/accept`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data = await res.json();
+
+      if (res.ok) {
+        // Find the accepted order
+        const acceptedOrder = orders.find((order) => order._id === orderId);
+
+        // Remove from nearby orders and add to assigned
+        setOrders((prev) => prev.filter((order) => order._id !== orderId));
+        setAssignedOrders((prev) => [
+          ...prev,
+          { ...acceptedOrder, status: "accepted" },
+        ]);
+
+        //Save in localStorage
+        const saved =
+          JSON.parse(localStorage.getItem(ACCEPTED_STORAGE_KEY)) || [];
+        const updated = [...saved, { ...acceptedOrder, status: "accepted" }];
+        localStorage.setItem(ACCEPTED_STORAGE_KEY, JSON.stringify(updated));
+
+        Swal.fire({
+          icon: "success",
+          title: "Order Accepted!",
+          text: "This order has been successfully accepted.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } else {
+        Swal.fire("Error", data.message || "Failed to accept order", "error");
+      }
+    } catch (err) {
+      Swal.fire("Error", "Error accepting order", "error");
+    }
+  };
+
+  const handleComplete = (orderId) => {
+    Swal.fire({
+      title: "Mark as complete?",
+      text: "Are you sure you want to complete this order?",
+      icon: "question",
+      iconColor: "#2196F3",
+      showCancelButton: true,
+      confirmButtonText: "Yes, complete it!",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#16a34a",
+      cancelButtonColor: "#6b7280",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const res = await fetch(
+            `http://localhost:5002/api/delivery/${orderId}/complete`,
+            {
+              method: "PATCH",
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          const data = await res.json();
+
+          if (res.ok) {
+            setAssignedOrders((prev) =>
+              prev.filter((order) => order._id !== orderId)
+            );
+
+            Swal.fire({
+              icon: "success",
+              title: "Order Completed!",
+              text: "The order has been marked as delivered.",
+              timer: 2000,
+              showConfirmButton: false,
+            });
+          } else {
+            Swal.fire("Error", data.message || "Failed to complete", "error");
+          }
+        } catch (err) {
+          Swal.fire("Error", "Server error", "error");
+        }
+      }
+    });
+  };
+
+  //   .then((result) => {
+  //     //remove from UI
+  //     if (result.isConfirmed) {
+  //       setAssignedOrders((prev) =>
+  //         prev.filter((order) => order._id !== orderId)
+  //       );
+
+  //       // Also remove from localStorage
+  //       const saved =
+  //         JSON.parse(localStorage.getItem(ACCEPTED_STORAGE_KEY)) || [];
+  //       const updated = saved.filter((order) => order._id !== orderId);
+  //       localStorage.setItem(ACCEPTED_STORAGE_KEY, JSON.stringify(updated));
+
+  //       Swal.fire({
+  //         icon: "success",
+  //         title: "Order Completed!",
+  //         text: "The order has been marked as completed.",
+  //         timer: 2000,
+  //         showConfirmButton: false,
+  //       });
+  //     }
+  //   });
+  // };
+  useEffect(() => {
+    fetchInitialOrders();
+
+    // Auto-refresh every 10 seconds
+    const interval = setInterval(() => {
+      fetchNearbyOrders();
+    }, 10000);
+
+    return () => clearInterval(interval); //to cleanup
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-orange-200 py-8 px-4">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-3xl font-bold mb-6 text-center">
+          Delivery Dashboard
+        </h1>
+
+        {/* Assigned Orders */}
+        <section className="mb-10">
+          <h2 className="text-xl font-semibold mb-3">
+            📦 Your Orders to Complete
+          </h2>
+          {assignedOrders.length === 0 ? (
+            <p className="text-gray-500">No orders assigned yet.</p>
+          ) : (
+            <div className="grid gap-4">
+              {assignedOrders.map((order) => (
+                <div
+                  key={order._id}
+                  className="p-4 bg-white border border-orange-500 rounded-md shadow flex justify-between items-center"
+                >
+                  <div>
+                    <p>
+                      <strong>Order ID:</strong> {order._id}
+                    </p>
+                    <p>
+                      <strong>Status:</strong> {order.status}
+                    </p>
+                    <p>
+                      <strong>Customer Location:</strong>
+                      {orderAddresses[order._id] || "Loading..."}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleComplete(order._id)}
+                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                  >
+                    Complete
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Nearby Orders */}
+        <section>
+          <h2 className="text-xl font-semibold mb-3">
+            📍 Nearby Orders (within 5 km)
+          </h2>
+          {orders.length === 0 ? (
+            <p className="text-gray-500">No nearby orders available.</p>
+          ) : (
+            <div className="grid gap-4">
+              {orders.map((order) => (
+                <div
+                  key={order._id}
+                  className="p-4 bg-white border border-orange-500 rounded-md shadow flex justify-between items-center"
+                >
+                  <div>
+                    <p>
+                      <strong>Order ID:</strong> {order._id}
+                    </p>
+                    <p>
+                      <strong>Status:</strong> {order.status}
+                    </p>
+                    <p>
+                      <strong>Customer Location:</strong>{" "}
+                      {orderAddresses[order._id] || "Loading..."}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleAccept(order._id)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                  >
+                    Accept
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+};
+
+export default DeliveryDashboard;
