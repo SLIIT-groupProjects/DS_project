@@ -9,9 +9,9 @@ export const loginUser = async (formData) => {
 
 // Register the user
 export const registerUser = async (formData) => {
-  return await axios.post(`${API_URL}/auth//register`, formData);
+  return await axios.post(`${API_URL}/auth/register`, formData);
 };
 
 export const fetchFoods = async () => {
-    return await axios.get(`http://localhost:5003/api/foods`);
+  return await axios.get(`http://localhost:5003/api/foods`);
 };
