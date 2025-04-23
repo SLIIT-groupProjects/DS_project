@@ -58,7 +58,7 @@ if (service === "auth") {
     app.use("/api/authDelivery", authDeliveryRoutes);
     app.use("/api/delivery", deliveryRoutes);
     app.use("/api/assignOrder", assignOrderRoutes);
-    const PORT = process.env.PORT || 5006;
+    const PORT = process.env.PORT || 5002;
     app.listen(PORT, () => console.log(`Delivery service is running on port ${PORT}`));
 } else {
     console.log("❌ Invalid SERVICE_TYPE specified. Please set SERVICE_TYPE in your .env file.");
