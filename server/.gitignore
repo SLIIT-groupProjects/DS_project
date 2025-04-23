@@ -1,4 +1,4 @@
-# compiled output
+# Compiled output
 /dist
 /node_modules
 /build
@@ -14,6 +14,7 @@ lerna-debug.log*
 
 # OS
 .DS_Store
+*.local
 
 # Tests
 /coverage
@@ -42,7 +43,7 @@ lerna-debug.log*
 .env.production.local
 .env.local
 
-# temp directory
+# Temp directory
 .temp
 .tmp
 
@@ -54,3 +55,6 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Lock files
+package-lock.json
