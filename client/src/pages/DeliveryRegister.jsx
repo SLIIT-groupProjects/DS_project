@@ -34,7 +34,7 @@ const DeliveryRegister = () => {
       const { lat, lng } = geoData.results[0].geometry;
 
       const res = await fetch(
-        "http://localhost:5002/api/authDelivery/register",
+        "http://localhost:5006/api/authDelivery/register",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
