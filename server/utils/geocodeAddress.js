@@ -2,10 +2,10 @@ import axios from 'axios';
 
 export const geocodeAddress = async (address) => {
     try {
-        const apiKey = '682e454929d744eabc0664d2e4b9daac'
+        const apiKey = '68089e697d758051577077lme2e6b28'
         const encoded = encodeURIComponent(address);
         const res = await axios.get(
-            `https://api.opencagedata.com/geocode/v1/json?q=${encoded}&key=${apiKey}`
+            `https://geocode.maps.co/search?q=${encoded}&api_key=${apiKey}`
         );
 
         if (res.data && res.data.results.length > 0) {

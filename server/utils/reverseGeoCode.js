@@ -1,10 +1,28 @@
 export const reverseGeocode = async (lat, lng) => {
-    const apiKey = '682e454929d744eabc0664d2e4b9daac';
-    const url = `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${apiKey}`;
+    const apiKey = '68089e697d758051577077lme2e6b28';
+    const url = `https://geocode.maps.co/reverse?lat=${lat}&lon=${lng}&api_key=${apiKey}`;
     try {
         const res = await fetch(url);
         const data = await res.json();
-        return data.results[0]?.formatted || 'Unknown Location';
+
+        if (data?.address) {
+            const a = data.address;
+
+            // Build a shorter address from available fields
+            const parts = [
+                a.road,
+                a.neighbourhood,
+                a.suburb,
+                a.village,
+                a.town,
+                a.city
+            ].filter(Boolean); // remove undefined/null
+
+            return parts.join(', ');
+        } else {
+            console.warn("⚠️ No address details found");
+            return "Unknown Location";
+        }
     } catch (err) {
         console.error('Reverse geocode failed:', err);
         return 'Unknown Location';

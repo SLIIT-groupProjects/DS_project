@@ -9,19 +9,19 @@ const DeliveryDashboard = () => {
 
   const ACCEPTED_STORAGE_KEY = "acceptedOrders";
 
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("delivery_token");
 
   const fetchInitialOrders = async () => {
     try {
       const resAssigned = await fetch(
-        "http://localhost:5002/api/delivery/assigned",
+        "http://localhost:5006/api/delivery/assigned",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
       const resNearby = await fetch(
-        "http://localhost:5002/api/delivery/orders",
+        "http://localhost:5006/api/delivery/orders",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -41,40 +41,9 @@ const DeliveryDashboard = () => {
     }
   };
 
-  // const fetchInitialOrders = async () => {
-  //   try {
-  //     const res = await fetch("http://localhost:5002/api/delivery/orders", {
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     });
-  //     const data = await res.json();
-
-  //     if (res.ok) {
-  //       // const fetchedAssigned = data.orders.filter(
-  //       //   (o) => o.status !== "pending"
-  //       // );
-  //       const fetchedUnassigned = data.orders.filter(
-  //         (o) => o.status === "pending"
-  //       );
-
-  //       // Load accepted orders from localStorage
-  //       const localAccepted =
-  //         JSON.parse(localStorage.getItem(ACCEPTED_STORAGE_KEY)) || [];
-
-  //       setOrders(fetchedUnassigned);
-  //       setAssignedOrders(localAccepted);
-
-  //       // Reverse geocode everything once
-  //       reverseGeocodeAll([...fetchedUnassigned, ...localAccepted]);
-  //     }
-  //   } catch (err) {
-  //     console.error(err);
-  //     alert("Error loading orders");
-  //   }
-  // };
-
   const fetchNearbyOrders = async () => {
     try {
-      const res = await fetch("http://localhost:5002/api/delivery/orders", {
+      const res = await fetch("http://localhost:5006/api/delivery/orders", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -106,7 +75,7 @@ const DeliveryDashboard = () => {
   const handleAccept = async (orderId) => {
     try {
       const res = await fetch(
-        `http://localhost:5002/api/delivery/orders/${orderId}/accept`,
+        `http://localhost:5006/api/delivery/orders/${orderId}/accept`,
         {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -146,6 +115,39 @@ const DeliveryDashboard = () => {
     }
   };
 
+  const handlePickup = async (orderId) => {
+    try {
+      const res = await fetch(
+        `http://localhost:5006/api/delivery/${orderId}/pickup`,
+        {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data = await res.json();
+
+      if (res.ok) {
+        setAssignedOrders((prev) =>
+          prev.map((order) =>
+            order._id === orderId ? { ...order, status: "pickedUp" } : order
+          )
+        );
+
+        Swal.fire({
+          icon: "success",
+          title: "Order Picked Up!",
+          text: "This order is now ready for delivery.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } else {
+        Swal.fire("Error", data.message || "Failed to pick up order", "error");
+      }
+    } catch (err) {
+      Swal.fire("Error", "Server error", "error");
+    }
+  };
+
   const handleComplete = (orderId) => {
     Swal.fire({
       title: "Mark as complete?",
@@ -161,7 +163,7 @@ const DeliveryDashboard = () => {
       if (result.isConfirmed) {
         try {
           const res = await fetch(
-            `http://localhost:5002/api/delivery/${orderId}/complete`,
+            `http://localhost:5006/api/delivery/${orderId}/complete`,
             {
               method: "PATCH",
               headers: { Authorization: `Bearer ${token}` },
@@ -191,29 +193,6 @@ const DeliveryDashboard = () => {
     });
   };
 
-  //   .then((result) => {
-  //     //remove from UI
-  //     if (result.isConfirmed) {
-  //       setAssignedOrders((prev) =>
-  //         prev.filter((order) => order._id !== orderId)
-  //       );
-
-  //       // Also remove from localStorage
-  //       const saved =
-  //         JSON.parse(localStorage.getItem(ACCEPTED_STORAGE_KEY)) || [];
-  //       const updated = saved.filter((order) => order._id !== orderId);
-  //       localStorage.setItem(ACCEPTED_STORAGE_KEY, JSON.stringify(updated));
-
-  //       Swal.fire({
-  //         icon: "success",
-  //         title: "Order Completed!",
-  //         text: "The order has been marked as completed.",
-  //         timer: 2000,
-  //         showConfirmButton: false,
-  //       });
-  //     }
-  //   });
-  // };
   useEffect(() => {
     fetchInitialOrders();
 
@@ -237,39 +216,80 @@ const DeliveryDashboard = () => {
           <h2 className="text-xl font-semibold mb-3">
             📦 Your Orders to Complete
           </h2>
-          {assignedOrders.length === 0 ? (
-            <p className="text-gray-500">No orders assigned yet.</p>
+          {assignedOrders.filter((order) => order.status === "pickedUp")
+            .length === 0 ? (
+            <p className="text-gray-500">No orders to complete.</p>
           ) : (
             <div className="grid gap-4">
-              {assignedOrders.map((order) => (
-                <div
-                  key={order._id}
-                  className="p-4 bg-white border border-orange-500 rounded-md shadow flex justify-between items-center"
-                >
-                  <div>
-                    <p>
-                      <strong>Order ID:</strong> {order._id}
-                    </p>
-                    <p>
-                      <strong>Status:</strong> {order.status}
-                    </p>
-                    <p>
-                      <strong>Customer Location:</strong>
-                      {orderAddresses[order._id] || "Loading..."}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => handleComplete(order._id)}
-                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+              {assignedOrders
+                .filter((order) => order.status === "pickedUp")
+                .map((order) => (
+                  <div
+                    key={order._id}
+                    className="p-4 bg-white border border-orange-500 rounded-md shadow flex justify-between items-center"
                   >
-                    Complete
-                  </button>
-                </div>
-              ))}
+                    <div>
+                      <p>
+                        <strong>Order ID:</strong> {order._id}
+                      </p>
+                      <p>
+                        <strong>Status:</strong> {order.status}
+                      </p>
+                      <p>
+                        <strong>Customer Location:</strong>
+                        {orderAddresses[order._id] || "Loading..."}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleComplete(order._id)}
+                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                    >
+                      Complete
+                    </button>
+                  </div>
+                ))}
             </div>
           )}
         </section>
 
+        {/* Orders to Pick Up */}
+        <section className="mb-10">
+          <h2 className="text-xl font-semibold mb-3">🚚 Orders to Pick Up</h2>
+          {assignedOrders.filter((order) => order.status === "accepted")
+            .length === 0 ? (
+            <p className="text-gray-500">No orders to pick up.</p>
+          ) : (
+            <div className="grid gap-4">
+              {assignedOrders
+                .filter((order) => order.status === "accepted")
+                .map((order) => (
+                  <div
+                    key={order._id}
+                    className="p-4 bg-white border border-yellow-500 rounded-md shadow flex justify-between items-center"
+                  >
+                    <div>
+                      <p>
+                        <strong>Order ID:</strong> {order._id}
+                      </p>
+                      <p>
+                        <strong>Status:</strong> {order.status}
+                      </p>
+                      <p>
+                        <strong>Customer Location:</strong>{" "}
+                        {orderAddresses[order._id] || "Loading..."}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handlePickup(order._id)}
+                      className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600"
+                    >
+                      Pick Up
+                    </button>
+                  </div>
+                ))}
+            </div>
+          )}
+        </section>
         {/* Nearby Orders */}
         <section>
           <h2 className="text-xl font-semibold mb-3">

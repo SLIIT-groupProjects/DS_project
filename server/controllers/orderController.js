@@ -1,6 +1,8 @@
 // orderController.js
 import Order from "../models/Order.js";
 import Cart from "../models/Cart.js";
+import AssignedOrder from "../models/AssignedOrder.js";
+import { handleNewOrderAssignment } from './assignOrderController.js';
 
 // Confirm Order
 export const confirmOrder = async (req, res) => {
@@ -53,6 +55,8 @@ export const confirmOrder = async (req, res) => {
         await order.save();
         await Cart.deleteOne({ customerId });
 
+        // Assign to nearby delivery people AFTER saving
+        await handleNewOrderAssignment(order._id);
         res.status(201).json({ message: "Order placed successfully", orderId: order._id });
     } catch (error) {
         res.status(500).json({ message: "Error confirming order", error });
@@ -80,16 +84,79 @@ export const getOrderDetails = async (req, res) => {
 };
 
 //Get Order details of the logged customer
+// export const getCustomerOrders = async (req, res) => {
+//     try {
+//         const customerId = req.user.id; // Get customerId from the JWT token (authenticated user)
+//         const orders = await Order.find({ customerId }).sort({ createdAt: -1 });
+//         // 1. Fetch assigned order statuses and sync
+//         for (const order of orders) {
+//             const assigned = await AssignedOrder.findOne({ orderId: order._id.toString() });
+//             if (assigned && assigned.status !== order.status) {
+//                 order.status = assigned.status;
+//                 await order.save(); // Keep in sync
+//             }
+//         }
+//         res.status(200).json(orders);
+//     } catch (error) {
+//         res.status(500).json({ message: "Error retrieving customer orders", error });
+//     }
+// };
 export const getCustomerOrders = async (req, res) => {
     try {
+        console.log("⏳ Starting getCustomerOrders for user:", req.user.id);
         const customerId = req.user.id; // Get customerId from the JWT token (authenticated user)
-        const orders = await Order.find({ customerId }).sort({ createdAt: -1 });
+
+        // First, simply try to get orders without any additional processing
+        let orders;
+        try {
+            orders = await Order.find({ customerId }).sort({ createdAt: -1 });
+            console.log(`✅ Found ${orders.length} orders for customer`);
+        } catch (findErr) {
+            console.error("❌ Error finding orders:", findErr);
+            return res.status(500).json({
+                message: "Error finding customer orders",
+                error: findErr.message
+            });
+        }
+
+        // Process orders one by one with detailed error handling
+        for (let i = 0; i < orders.length; i++) {
+            const order = orders[i];
+            console.log(`🔄 Processing order ${i + 1}/${orders.length}: ${order._id}`);
+
+            try {
+                // Convert the ObjectId to string for consistency
+                const orderIdString = order._id.toString();
+                console.log(`🔍 Looking for assigned order with orderId: ${orderIdString}`);
+
+                const assigned = await AssignedOrder.findOne({ orderId: orderIdString });
+
+                if (assigned) {
+                    console.log(`✅ Found assigned order with status: ${assigned.status}`);
+                    if (assigned.status !== order.status) {
+                        console.log(`🔄 Updating order status from ${order.status} to ${assigned.status}`);
+                        order.status = assigned.status;
+                        await order.save();
+                    }
+                } else {
+                    console.log(`ℹ️ No assigned order found for order ID: ${orderIdString}`);
+                }
+            } catch (orderErr) {
+                console.error(`❌ Error processing order ${order._id}:`, orderErr);
+                // Continue processing other orders
+            }
+        }
+
+        console.log("✅ All orders processed successfully");
         res.status(200).json(orders);
     } catch (error) {
-        res.status(500).json({ message: "Error retrieving customer orders", error });
+        console.error("❌ Uncaught error in getCustomerOrders:", error);
+        res.status(500).json({
+            message: "Error retrieving customer orders",
+            error: error.message || "Unknown error"
+        });
     }
 };
-
 // Delete Order
 export const deleteOrder = async (req, res) => {
     try {

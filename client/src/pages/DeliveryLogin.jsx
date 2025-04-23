@@ -11,7 +11,7 @@ const DeliveryLogin = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:5002/api/authDelivery/login", {
+      const res = await fetch("http://localhost:5006/api/authDelivery/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -19,7 +19,7 @@ const DeliveryLogin = () => {
 
       const data = await res.json();
       if (res.ok) {
-        localStorage.setItem("token", data.token);
+        localStorage.setItem("delivery_token", data.token);
         navigate("/deliveryDashboard");
       } else {
         alert(data.message || "Login failed");
