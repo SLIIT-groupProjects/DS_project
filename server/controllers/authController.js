@@ -49,6 +49,11 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    // Check if user account is active
+    if (user.status === 'inactive') {
+      return res.status(403).json({ message: 'Your account has been deactivated. Please contact support.' });
+    }
+
     // Check password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
