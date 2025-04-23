@@ -59,7 +59,8 @@ export const confirmOrder = async (req, res) => {
         await handleNewOrderAssignment(order._id);
         res.status(201).json({ message: "Order placed successfully", orderId: order._id });
     } catch (error) {
-        res.status(500).json({ message: "Error confirming order", error });
+        console.error("❌ Order Confirm Error:", error.message);
+        res.status(500).json({ message: "Error confirming order", error: error.message });
     }
 };
 
