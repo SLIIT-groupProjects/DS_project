@@ -19,6 +19,9 @@ import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import ratingRoutes from "./routes/ratingRoutes.js";
 
+// Compatibility Layer (importing server.js)
+import app from './server.js';  // Added based on your initial version
+
 dotenv.config();
 connectDB();
 
@@ -63,3 +66,5 @@ if (service === "auth") {
 } else {
     console.log("❌ Invalid SERVICE_TYPE specified. Please set SERVICE_TYPE in your .env file.");
 }
+
+console.log('🔄 Using server.js as the main entry point');
