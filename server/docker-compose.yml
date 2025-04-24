@@ -1,8 +1,8 @@
 services:
   auth-service:
     build:
-      context: .  # context is the current folder, i.e., 'server'
-      dockerfile: auth-service/Dockerfile  # Dockerfile is inside auth-service
+      context: ./food-service # context is the current folder, i.e., 'server'
+      dockerfile: Dockerfile # Dockerfile is inside auth-service
     container_name: auth-service
     environment:
       - SERVICE_TYPE=auth
@@ -14,33 +14,33 @@ services:
     depends_on:
       - mongo
     volumes:
-      - .:/app 
+      - .:/app
     networks:
       - backend_network
 
   food-service:
     build:
-      context: .  # context is the current folder (server)
-      dockerfile: food-service/Dockerfile  # Dockerfile inside food-service
+      context: ./auth-service # context is the current folder (server)
+      dockerfile: Dockerfile # Dockerfile inside food-service
     container_name: food-service
     environment:
       - SERVICE_TYPE=food
       - PORT=5003
     ports:
-      - "5003:5003" 
+      - "5003:5003"
     env_file:
       - .env
     depends_on:
       - mongo
     volumes:
-      - .:/app  
+      - .:/app
     networks:
       - backend_network
 
   cart-service:
     build:
-      context: .  # context is the current folder (server)
-      dockerfile: cart-service/Dockerfile  # Dockerfile inside food-service
+      context: ./cart-service # context is the current folder (server)
+      dockerfile: Dockerfile # Dockerfile inside food-service
     container_name: cart-service
     environment:
       - SERVICE_TYPE=cart
@@ -52,26 +52,45 @@ services:
     depends_on:
       - mongo
     volumes:
-      - .:/app  
+      - .:/app
     networks:
       - backend_network
 
   order-service:
     build:
-      context: .  # context is the current folder (server)
-      dockerfile: order-service/Dockerfile  # Dockerfile inside food-service
+      context: ./order-service # context is the current folder (server)
+      dockerfile: Dockerfile # Dockerfile inside food-service
     container_name: order-service
     environment:
       - SERVICE_TYPE=order
       - PORT=5005
     ports:
-      - "5005:5005" 
+      - "5005:5005"
     env_file:
       - .env
     depends_on:
       - mongo
     volumes:
-      - .:/app  
+      - .:/app
+    networks:
+      - backend_network
+
+  delivery-service:
+    build:
+      context: ./delivery-service
+      dockerfile: Dockerfile
+    container_name: delivery-service
+    environment:
+      - SERVICE_TYPE=delivery
+      - PORT=5006
+    ports:
+      - "5006:5006"
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+    volumes:
+      - .:/app
     networks:
       - backend_network
 
