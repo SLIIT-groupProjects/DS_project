@@ -75,6 +75,18 @@ const Navbar = () => {
               >
                 DELIVERY
               </Link>
+              <Link
+                to="/restaurant/login"
+                className="hover:text-gray-200 font-bold"
+              >
+                RESTURENT
+              </Link>
+              <Link
+                to="/admin/login"
+                className="hover:text-gray-200 font-bold"
+              >
+                ADMIN
+              </Link>
             </>
           ) : isLoggedIn ? (
             <>
