@@ -18,6 +18,7 @@ import foodRoutes from "./routes/foodRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import ratingRoutes from "./routes/ratingRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -60,6 +61,10 @@ if (service === "auth") {
     app.use("/api/assignOrder", assignOrderRoutes);
     const PORT = process.env.PORT || 5006;
     app.listen(PORT, () => console.log(`Delivery service is running on port ${PORT}`));
+} else if (service === "payment") {
+    app.use("/api/payment", paymentRoutes);
+    const PORT = process.env.PORT || 5008;
+    app.listen(PORT, () => console.log(`Payment service is running on port ${PORT}`));
 } else {
     console.log("❌ Invalid SERVICE_TYPE specified. Please set SERVICE_TYPE in your .env file.");
 }

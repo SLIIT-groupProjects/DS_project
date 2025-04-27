@@ -109,8 +109,7 @@ const Checkout = () => {
         icon: "error",
         confirmButtonText: "Okay",
         customClass: {
-          confirmButton:
-            "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
+          confirmButton: "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
         },
         buttonsStyling: false,
       });
@@ -123,120 +122,45 @@ const Checkout = () => {
       deliveryOption,
       scheduledDate,
       scheduledTime,
+      items: cart.items.map(item => ({
+        name: item.name,
+        price: item.price,
+        size: item.size,
+        quantity: item.quantity
+      }))
     };
 
-    console.log("🛒 Order Data Being Sent:", orderData);
     try {
-      // Confirm order and save it in the db
-      const response = await axios.post(
+      // Create order with pending status (no paymentIntentId)
+      const token = localStorage.getItem("token");
+      const { data } = await axios.post(
         "http://localhost:5005/api/orders/confirm",
         orderData,
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
         }
       );
 
-      const orderId = response.data.orderId;
-
-      Swal.fire({
-        title: "Rate Our Service!",
-        html: `
-                    <div class="star-rating text-gray-400 cursor-pointer text-4xl">
-                        <span class="star" data-value="1">★</span>
-                        <span class="star" data-value="2">★</span>
-                        <span class="star" data-value="3">★</span>
-                        <span class="star" data-value="4">★</span>
-                        <span class="star" data-value="5">★</span>
-                    </div>
-                `,
-        showCancelButton: true,
-        cancelButtonText: "Skip for now",
-        confirmButtonText: "Submit",
-        customClass: {
-          confirmButton:
-            "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
-          cancelButton:
-            "w-[400px] bg-red-400 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
-        },
-        didOpen: () => {
-          const stars = document.querySelectorAll(".star");
-          stars.forEach((star) => {
-            star.addEventListener("click", () => {
-              const rating = star.getAttribute("data-value");
-              stars.forEach((s) => s.classList.remove("text-yellow-500"));
-              for (let i = 0; i < rating; i++) {
-                stars[i].classList.add("text-yellow-500");
-              }
-              star.setAttribute("data-selected", rating); // Store selected rating
-            });
-          });
-        },
-      }).then(async (result) => {
-        // If user skips the rating, we assign a default rating
-        const selectedRating = document.querySelector("[data-selected]")
-          ? document
-              .querySelector("[data-selected]")
-              .getAttribute("data-selected")
-          : null;
-        const rating = selectedRating || 5; // Default rating is 5 if no selection
-
-        if (selectedRating) {
-          // Show review prompt if the customer rated
-          const reviewResult = await Swal.fire({
-            title: "Review About Us!",
-            input: "textarea",
-            inputPlaceholder: "Type your review...",
-            showCancelButton: true,
-            cancelButtonText: "Skip for now",
-            confirmButtonText: "Okay",
-            customClass: {
-              confirmButton:
-                "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
-              cancelButton:
-                "w-[400px] bg-red-400 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
-            },
-          });
-
-          const review = reviewResult.isConfirmed ? reviewResult.value : "";
-
-          // Save the rating and review
-          await axios.put(
-            `http://localhost:5005/api/orders/${orderId}/rating`,
-            { rating, review },
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            }
-          );
+      // Navigate to payment with order data from backend
+      navigate('/payment', {
+        state: {
+          amount: data.totalPayable,
+          orderData: {
+            ...orderData,
+            _id: data.orderId // Pass the created order's ID
+          }
         }
-
-        // Success message
-        Swal.fire({
-          title: "Success!",
-          text: "Order is placed successfully!",
-          icon: "success",
-          confirmButtonText: "Okay",
-          customClass: {
-            confirmButton:
-              "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
-          },
-        }).then(() => {
-          navigate("/orders"); // Navigate to orders page
-        });
       });
     } catch (error) {
-      console.error("Error confirming order:", error);
+      console.error("Error creating order:", error.response?.data || error);
       Swal.fire({
         title: "Error",
-        text: "Failed to confirm order",
+        text: error.response?.data?.message || "Failed to create order",
         icon: "error",
-        confirmButtonText: "Try Again!",
-        customClass: {
-          confirmButton:
-            "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
-        },
-        buttonsStyling: false,
+        confirmButtonText: "Try Again!"
       });
     }
   };

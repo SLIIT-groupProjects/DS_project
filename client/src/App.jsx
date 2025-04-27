@@ -15,36 +15,41 @@ import FoodDetails from "./pages/FoodDetails";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
+import Payment from './pages/Payment';
+
 //delivery pages
 import DeliveryLogin from "./pages/DeliveryLogin";
 import DeliveryRegister from "./pages/DeliveryRegister";
 import DeliveryDashboard from "./pages/DeliveryDashboard";
 
-const App = () => (
-  <Router>
-    <Navbar />
-    <div className="min-h-screen flex flex-col justify-between">
-      <div className="flex-grow">
-        <Routes>
-          {/* thisal routes */}
-          <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/foods" element={<FoodList />} />
-          <Route path="/foods/:id" element={<FoodDetails />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/orders" element={<Orders />} />
+function App() {
+  return (
+    <Router>
+      <Navbar />
+      <div className="min-h-screen flex flex-col justify-between">
+        <div className="flex-grow">
+          <Routes>
+            {/* thisal routes */}
+            <Route path="/" element={<Navigate to="/login" />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/foods" element={<FoodList />} />
+            <Route path="/foods/:id" element={<FoodDetails />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/payment" element={<Payment />} />
 
-          {/* vihara-delivery routes */}
-          <Route path="/deliveryLogin" element={<DeliveryLogin />} />
-          <Route path="/deliveryRegister" element={<DeliveryRegister />} />
-          <Route path="/deliveryDashboard" element={<DeliveryDashboard />} />
-        </Routes>
+            {/* vihara-delivery routes */}
+            <Route path="/deliveryLogin" element={<DeliveryLogin />} />
+            <Route path="/deliveryRegister" element={<DeliveryRegister />} />
+            <Route path="/deliveryDashboard" element={<DeliveryDashboard />} />
+          </Routes>
+        </div>
+        <Footer />
       </div>
-      <Footer />
-    </div>
-  </Router>
-);
+    </Router>
+  );
+}
 
 export default App;

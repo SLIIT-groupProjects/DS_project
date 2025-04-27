@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { Trash } from "lucide-react";
 import FMLogo from "../asserts/icons/FMLogo.png";
+import { useNavigate } from "react-router-dom";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.title = "FOOD MART | Orders";
@@ -106,7 +108,7 @@ const Orders = () => {
               </p>
               {order.deliveryOption === "schedule" && order.scheduledTime && (
                 <p>
-                  <strong>Scheduled Time:</strong>{" "}
+                  <strong>Scheduled Time:</strong>
                   <span className="ml-[41px]">
                     {new Date(order.scheduledTime).toLocaleString()}
                   </span>
@@ -114,12 +116,12 @@ const Orders = () => {
               )}
 
               <div className="mt-4">
-                <strong className="text-orange-500">Rating:</strong>{" "}
+                <strong className="text-orange-500">Rating:</strong>
                 <span className="ml-[108px]">
                   {order.rating ? renderStars(order.rating) : " Not Rated"}
-                </span>{" "}
+                </span>
                 <br />
-                <strong className="text-orange-500">Review:</strong>{" "}
+                <strong className="text-orange-500">Review:</strong>
                 <span className="ml-[105px]">
                   {order.review ? order.review : "No review yet."}
                 </span>
@@ -131,6 +133,31 @@ const Orders = () => {
               >
                 <Trash size={30} />
               </button>
+              {order.status === "pending" && (
+                <button
+                  className="absolute bottom-2 right-2 bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600"
+                  onClick={() => {
+                    // Navigate to payment page with order details
+                    navigate('/payment', {
+                      state: {
+                        amount: order.totalPayable,
+                        orderData: {
+                          address: order.address,
+                          phone: order.phone,
+                          deliveryOption: order.deliveryOption,
+                          scheduledDate: order.scheduledDate,
+                          scheduledTime: order.scheduledTime,
+                          items: order.items,
+                          customerId: order.customerId,
+                          _id: order._id
+                        }
+                      }
+                    });
+                  }}
+                >
+                  Continue Payment
+                </button>
+              )}
             </div>
           ))}
         </div>

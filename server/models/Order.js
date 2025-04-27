@@ -14,7 +14,7 @@ const orderSchema = new mongoose.Schema({
     ],
 
     totalPayable: { type: Number, required: true },
-    status: { type: String, enum: ["pending", "accepted", "pickedUp", "delivered"], default: "pending" },
+    status: { type: String, enum: ["paid", "pending", "accepted", "pickedUp", "delivered"], default: "pending" },
     deliveryOption: { type: String, enum: ["standard", "schedule"], required: true },
     scheduledTime: { type: Date, default: null },
     rating: { type: Number, min: 1, max: 5 },
