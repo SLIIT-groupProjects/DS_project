@@ -2,65 +2,105 @@
 import Order from "../models/Order.js";
 import Cart from "../models/Cart.js";
 import AssignedOrder from "../models/AssignedOrder.js";
+import Food from "../models/Food.js";
 import { handleNewOrderAssignment } from './assignOrderController.js';
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Confirm Order
 export const confirmOrder = async (req, res) => {
     try {
-        const { address, phone, deliveryOption, scheduledDate, scheduledTime } = req.body;
-        const customerId = req.user.id; // Get customerId from the JWT token (authenticated user)
+        const { address, phone, deliveryOption, scheduledDate, scheduledTime, items, paymentIntentId, orderId } = req.body;
+        const customerId = req.user.id;
 
-        // Validate delivery option
-        if (!["standard", "schedule"].includes(deliveryOption)) {
-            return res.status(400).json({ message: "Invalid delivery option" });
-        }
+        // Only update status if orderId and paymentIntentId are present
+        if (orderId && paymentIntentId) {
+            try {
+                const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+                console.log("Payment Intent:", paymentIntent);
+                console.log("Payment Intent Status:", paymentIntent.status);
 
-        // Validate scheduled date and time
-        let scheduledDateTime = null;
-        if (deliveryOption === "schedule") {
-            if (!scheduledDate || !scheduledTime) {
-                return res.status(400).json({ message: "Scheduled date and time are required" });
+                if (paymentIntent.status === 'succeeded') {
+                    try {
+                        // Update status to 'paid' after payment success
+                        console.log(`Updating order status to 'paid' for orderId: ${orderId}`);
+                        const updatedOrder = await Order.findByIdAndUpdate(
+                            orderId,
+                            { status: 'paid' },
+                            { new: true }
+                        );
+                        console.log("Order status updated to paid in database:", updatedOrder);
+
+                        return res.status(200).json({
+                            message: "Order status updated to paid",
+                            orderId: updatedOrder._id,
+                            status: updatedOrder.status,
+                            totalPayable: updatedOrder.totalPayable
+                        });
+                    } catch (dbError) {
+                        console.error("Database update error:", dbError);
+                        return res.status(500).json({
+                            message: "Error updating order status in database",
+                            error: dbError.message
+                        });
+                    }
+                } else {
+                    return res.status(400).json({
+                        message: "Payment not successful",
+                        status: paymentIntent.status
+                    });
+                }
+            } catch (stripeErr) {
+                console.error("Stripe Error:", stripeErr);
+                console.error("Payment Intent ID:", paymentIntentId);
+                return res.status(400).json({
+                    message: "Payment verification failed",
+                    error: stripeErr.message
+                });
             }
-            scheduledDateTime = new Date(`${scheduledDate}T${scheduledTime}:00Z`);
         }
 
-        // Fetch cart items
-        const cart = await Cart.findOne({ customerId }).populate("items.foodId");
-        if (!cart || cart.items.length === 0) return res.status(400).json({ message: "Cart is empty" });
+        // Otherwise, create initial order with pending status (no paymentIntentId)
+        const totalPayable = items.reduce((total, item) => 
+            total + (item.price * item.quantity), 0);
 
-        // Prepare order items
-        let totalPayable = 0;
-        const orderItems = cart.items.map(item => {
-            const payableAmount = item.foodId.price * item.quantity;
-            totalPayable += payableAmount;
-            return {
-                name: item.foodId.name,
-                price: item.foodId.price,
-                size: item.size,
-                quantity: item.quantity
-            };
-        });
-
-        // Set order
-        const order = new Order({
+        // Create initial order with pending status
+        const order = await Order.create({
             customerId,
             address,
             phone,
-            items: orderItems,
+            items,
             totalPayable,
+            status: 'pending',
             deliveryOption,
-            scheduledTime: scheduledDateTime
+            scheduledTime: deliveryOption === "schedule"
+                ? new Date(`${scheduledDate}T${scheduledTime}`)
+                : null
         });
 
-        await order.save();
-        await Cart.deleteOne({ customerId });
+        console.log("Order created:", order); // Log the created order
 
-        // Assign to nearby delivery people AFTER saving
-        await handleNewOrderAssignment(order._id);
-        res.status(201).json({ message: "Order placed successfully", orderId: order._id });
+        // Clear cart and assign delivery
+        try {
+            const cartDeleteResult = await Cart.deleteOne({ customerId });
+            console.log("Cart deletion result:", cartDeleteResult);
+            console.log("Calling handleNewOrderAssignment with orderId:", order._id);
+            await handleNewOrderAssignment(order._id);
+            console.log("handleNewOrderAssignment completed successfully");
+        } catch (cartError) {
+            console.error("Cart deletion or assignment error:", cartError);
+            return res.status(500).json({
+                message: "Error clearing cart or assigning delivery",
+                error: cartError.message
+            });
+        }
     } catch (error) {
-        console.error("❌ Order Confirm Error:", error.message);
-        res.status(500).json({ message: "Error confirming order", error: error.message });
+        console.error("Order confirmation error:", error);
+        res.status(500).json({
+            message: "Error confirming order",
+            error: error.message
+        });
     }
 };
 
@@ -84,24 +124,28 @@ export const getOrderDetails = async (req, res) => {
     }
 };
 
+export const updateOrderStatus = async (orderId, status) => {
+    try {
+        // Update order status in database
+        const updatedOrder = await Order.findByIdAndUpdate(
+            orderId,
+            { status: status },
+            { new: true }
+        );
+
+        if (!updatedOrder) {
+            throw new Error("Order not found");
+        }
+
+        console.log(`Order status updated to ${status} in database`);
+        return updatedOrder;
+    } catch (error) {
+        console.error("Error updating order status in database:", error);
+        throw error;
+    }
+};
+
 //Get Order details of the logged customer
-// export const getCustomerOrders = async (req, res) => {
-//     try {
-//         const customerId = req.user.id; // Get customerId from the JWT token (authenticated user)
-//         const orders = await Order.find({ customerId }).sort({ createdAt: -1 });
-//         // 1. Fetch assigned order statuses and sync
-//         for (const order of orders) {
-//             const assigned = await AssignedOrder.findOne({ orderId: order._id.toString() });
-//             if (assigned && assigned.status !== order.status) {
-//                 order.status = assigned.status;
-//                 await order.save(); // Keep in sync
-//             }
-//         }
-//         res.status(200).json(orders);
-//     } catch (error) {
-//         res.status(500).json({ message: "Error retrieving customer orders", error });
-//     }
-// };
 export const getCustomerOrders = async (req, res) => {
     try {
         console.log("⏳ Starting getCustomerOrders for user:", req.user.id);

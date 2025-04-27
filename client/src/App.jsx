@@ -15,6 +15,8 @@ import FoodDetails from "./pages/FoodDetails";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
+import Payment from "./pages/Payment";
+
 //delivery pages
 import DeliveryLogin from "./pages/DeliveryLogin";
 import DeliveryRegister from "./pages/DeliveryRegister";
@@ -32,27 +34,36 @@ import AdminRegister from "./pages/AdminRegister";
 
 const App = () => {
   const isCustomerRoute = (path) => {
-    const customerRoutes = ['/login', '/register', '/foods', '/cart', '/checkout', '/orders'];
-    return customerRoutes.some(route => path.startsWith(route)) || path === '/';
+    const customerRoutes = [
+      "/login",
+      "/register",
+      "/foods",
+      "/cart",
+      "/checkout",
+      "/orders",
+    ];
+    return (
+      customerRoutes.some((route) => path.startsWith(route)) || path === "/"
+    );
   };
-  
+
   const isRestaurantRoute = (path) => {
-    return path.startsWith('/restaurant');
+    return path.startsWith("/restaurant");
   };
-  
+
   const isDeliveryRoute = (path) => {
-    return path.startsWith('/delivery');
+    return path.startsWith("/delivery");
   };
-  
+
   const isAdminRoute = (path) => {
-    return path.startsWith('/admin');
+    return path.startsWith("/admin");
   };
 
   return (
     <Router>
       {/* Conditionally render Navbar only for customer routes */}
       {isCustomerRoute(window.location.pathname) && <Navbar />}
-      
+
       <div className="min-h-screen flex flex-col justify-between">
         <div className="flex-grow">
           <Routes>
@@ -70,23 +81,38 @@ const App = () => {
             <Route path="/deliveryLogin" element={<DeliveryLogin />} />
             <Route path="/deliveryRegister" element={<DeliveryRegister />} />
             <Route path="/deliveryDashboard" element={<DeliveryDashboard />} />
-            
+
             {/* Restaurant routes */}
             <Route path="/restaurant/login" element={<RestaurantLogin />} />
-            <Route path="/restaurant/register" element={<RestaurantRegister />} />
-            <Route path="/restaurant/dashboard" element={<RestaurantDashboard />} />
-            <Route path="/restaurant/create-profile" element={<RestaurantProfileForm />} />
-            <Route path="/restaurant/edit-profile" element={<RestaurantProfileForm />} />
+            <Route
+              path="/restaurant/register"
+              element={<RestaurantRegister />}
+            />
+            <Route
+              path="/restaurant/dashboard"
+              element={<RestaurantDashboard />}
+            />
+            <Route
+              path="/restaurant/create-profile"
+              element={<RestaurantProfileForm />}
+            />
+            <Route
+              path="/restaurant/edit-profile"
+              element={<RestaurantProfileForm />}
+            />
             <Route path="/restaurant/add-item" element={<MenuItemForm />} />
-            <Route path="/restaurant/edit-item/:itemId" element={<MenuItemForm />} />
-            
+            <Route
+              path="/restaurant/edit-item/:itemId"
+              element={<MenuItemForm />}
+            />
+
             {/* Admin routes */}
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/register" element={<AdminRegister />} />
           </Routes>
         </div>
-        
+
         {/* Conditionally render Footer only for customer routes */}
         {isCustomerRoute(window.location.pathname) && <Footer />}
       </div>
