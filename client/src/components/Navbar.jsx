@@ -96,9 +96,6 @@ const Navbar = () => {
               <Link to="/orders" className="hover:text-gray-200 font-bold">
                 ORDERS
               </Link>
-              <Link to="/payments" className="hover:text-gray-200 font-bold">
-                PAYMENTS
-              </Link>
               <Link
                 to="/deliveryLogin"
                 className="hover:text-gray-200 font-bold"
