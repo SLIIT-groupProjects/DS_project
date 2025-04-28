@@ -3,6 +3,7 @@ import Restaurant from "../models/Restaurant.js";
 import RestaurantOwner from "../models/RestaurantOwner.js";
 import User from "../models/User.js";
 import Transaction from "../models/Transaction.js";
+import DeliveryPerson from "../models/DeliveryPerson.js";
 
 // Get all restaurants
 export const getAllRestaurants = async (req, res) => {
@@ -137,6 +138,16 @@ export const getAllAdmins = async (req, res) => {
         res.status(200).json(admins);
     } catch (error) {
         res.status(500).json({ message: "Error retrieving admins", error: error.message });
+    }
+};
+
+// Get all delivery persons
+export const getAllDeliveryPersons = async (req, res) => {
+    try {
+        const deliveryPersons = await DeliveryPerson.find().select("-password");
+        res.status(200).json(deliveryPersons);
+    } catch (error) {
+        res.status(500).json({ message: "Error retrieving delivery persons", error: error.message });
     }
 };
 

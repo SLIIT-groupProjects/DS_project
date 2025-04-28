@@ -8,7 +8,8 @@ import {
     verifyRestaurantOwner,
     getAllTransactions,
     updateTransactionStatus,
-    getAllAdmins
+    getAllAdmins,
+    getAllDeliveryPersons
 } from "../controllers/adminController.js";
 import { authenticateAdmin } from "../middlewares/authRestaurantMiddleware.js";
 
@@ -26,6 +27,7 @@ router.get("/users", getAllUsers);
 router.get("/restaurant-owners", getAllRestaurantOwners);
 router.get("/pending-verifications", getPendingVerifications);
 router.put("/restaurant-owners/:ownerId/verify", verifyRestaurantOwner);
+router.get("/delivery-persons", getAllDeliveryPersons);
 
 // Financial transactions
 router.get("/transactions", getAllTransactions);
