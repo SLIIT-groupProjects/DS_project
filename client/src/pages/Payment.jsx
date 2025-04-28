@@ -91,6 +91,11 @@ const PaymentForm = ({ amount, orderData }) => {
         text: "Payment Successful and Order Placed!",
         icon: "success",
         confirmButtonText: "View Orders",
+        customClass: {
+          confirmButton:
+            "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
+        },
+        buttonsStyling: false,
       });
 
       navigate("/orders");
@@ -100,6 +105,12 @@ const PaymentForm = ({ amount, orderData }) => {
         title: "Payment Failed",
         text: err.message,
         icon: "error",
+        confirmButtonText: "OK",
+        customClass: {
+          confirmButton:
+            "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
+        },
+        buttonsStyling: false,
       });
     } finally {
       setIsProcessing(false);
