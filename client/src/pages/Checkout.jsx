@@ -13,6 +13,7 @@ const Checkout = () => {
   const [deliveryOption, setDeliveryOption] = useState("standard");
   const [scheduledDate, setScheduledDate] = useState("");
   const [scheduledTime, setScheduledTime] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     document.title = "FOOD MART | Checkout";
@@ -102,6 +103,24 @@ const Checkout = () => {
   }, [navigate]);
 
   const handleConfirmOrder = async () => {
+    if (isSubmitting) return; // Prevent duplicate submissions
+    setIsSubmitting(true);
+
+    if (cart.items.length === 0) {
+      Swal.fire({
+        title: "Error",
+        text: "Your cart is empty. Please add items before confirming the order.",
+        icon: "error",
+        confirmButtonText: "Okay",
+        customClass: {
+          confirmButton: "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
+        },
+        buttonsStyling: false,
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
     if (deliveryOption === "schedule" && (!scheduledDate || !scheduledTime)) {
       Swal.fire({
         title: "Error",
@@ -113,6 +132,7 @@ const Checkout = () => {
         },
         buttonsStyling: false,
       });
+      setIsSubmitting(false);
       return;
     }
 
@@ -144,6 +164,17 @@ const Checkout = () => {
         }
       );
 
+      // Check for valid response
+      if (!data.orderId || !data.totalPayable) {
+        Swal.fire({
+          title: "Error",
+          text: "Order creation failed. Please try again.",
+          icon: "error",
+          confirmButtonText: "Okay"
+        });
+        return;
+      }
+
       // Navigate to payment with order data from backend
       navigate('/payment', {
         state: {
@@ -162,6 +193,8 @@ const Checkout = () => {
         icon: "error",
         confirmButtonText: "Try Again!"
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -259,9 +292,10 @@ const Checkout = () => {
         <br />
 
         <Button
-          text="Confirm Order"
+          text={isSubmitting ? "Processing..." : "Confirm Order"}
           className="mt-4"
           onClick={handleConfirmOrder}
+          disabled={cart.items.length === 0 || isSubmitting}
         />
       </div>
       <br />
@@ -270,3 +304,19 @@ const Checkout = () => {
 };
 
 export default Checkout;
+
+// If the button still does not work, check your Button component implementation.
+// It should look like this:
+
+/*
+const Button = ({ text, onClick, className, disabled }) => (
+  <button
+    className={className}
+    onClick={onClick}
+    disabled={disabled}
+    type="button"
+  >
+    {text}
+  </button>
+);
+*/

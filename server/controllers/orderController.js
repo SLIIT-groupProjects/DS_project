@@ -95,6 +95,12 @@ export const confirmOrder = async (req, res) => {
                 error: cartError.message
             });
         }
+
+        // Respond with orderId and totalPayable so client can proceed to payment
+        return res.status(200).json({
+            orderId: order._id,
+            totalPayable: order.totalPayable
+        });
     } catch (error) {
         console.error("Order confirmation error:", error);
         res.status(500).json({
