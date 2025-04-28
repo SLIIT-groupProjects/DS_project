@@ -2,17 +2,39 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { FiUsers, FiShoppingBag, FiCheckCircle, FiXCircle, FiDollarSign, FiLogOut, FiRefreshCw } from "react-icons/fi";
+import {
+  FiUsers,
+  FiShoppingBag,
+  FiDollarSign,
+  FiUser,
+  FiRefreshCw,
+  FiLogOut,
+  FiCheckCircle,
+  FiXCircle,
+  FiEye,
+  FiEdit,
+  FiTrash,
+} from "react-icons/fi";
+import FMLogo from "../asserts/icons/FMLogo.png";
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState("restaurants");
+  const [loading, setLoading] = useState(true);
   const [restaurants, setRestaurants] = useState([]);
   const [restaurantOwners, setRestaurantOwners] = useState([]);
   const [pendingVerifications, setPendingVerifications] = useState([]);
   const [users, setUsers] = useState([]);
   const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    email: "",
+    address: "",
+    phone: "",
+  });
 
   useEffect(() => {
     document.title = "FOOD MART | Admin Dashboard";
@@ -170,6 +192,322 @@ const AdminDashboard = () => {
         text: "Failed to update the transaction status.",
       });
     }
+  };
+
+  // Get user by ID
+  const getUserById = async (userId) => {
+    try {
+      const token = localStorage.getItem("admin_token");
+      const response = await axios.get(
+        `http://localhost:5008/api/admin/users/${userId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to fetch user details.",
+      });
+      return null;
+    }
+  };
+
+  // Handle view user
+  const handleViewUser = async (userId) => {
+    const user = await getUserById(userId);
+    if (user) {
+      setSelectedUser(user);
+      setShowViewModal(true);
+    }
+  };
+
+  // Handle edit user
+  const handleEditUser = async (userId) => {
+    const user = await getUserById(userId);
+    if (user) {
+      setSelectedUser(user);
+      setEditFormData({
+        name: user.name,
+        email: user.email,
+        address: user.address,
+        phone: user.phone,
+      });
+      setShowEditModal(true);
+    }
+  };
+
+  // Handle delete user
+  const handleDeleteUser = (userId) => {
+    console.log("Delete user initiated for ID:", userId);
+    
+    Swal.fire({
+      title: "Delete User",
+      text: "Are you sure you want to delete this user? This action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Delete",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const token = localStorage.getItem("admin_token");
+          if (!token) {
+            throw new Error("Admin token not found. Please login again.");
+          }
+          
+          console.log("Sending delete request to:", `http://localhost:5008/api/admin/users/${userId}`);
+          console.log("With token:", token.substring(0, 20) + "...");
+          
+          const response = await axios.delete(
+            `http://localhost:5008/api/admin/users/${userId}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          
+          console.log("Delete response:", response.data);
+          
+          setUsers(users.filter(user => user._id !== userId));
+          
+          Swal.fire({
+            icon: "success",
+            title: "User Deleted",
+            text: "User has been successfully deleted.",
+          });
+        } catch (error) {
+          console.error("Error deleting user:", error);
+          console.log("Error details:", {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+            headers: error.response?.headers,
+          });
+          
+          let errorMessage = "Failed to delete user.";
+          if (error.response) {
+            errorMessage = error.response.data?.message || 
+                           `Server error (${error.response.status}): ${JSON.stringify(error.response.data)}`;
+          } else if (error.request) {
+            errorMessage = "No response received from server. Please check your connection.";
+          } else {
+            errorMessage = error.message;
+          }
+          
+          Swal.fire({
+            icon: "error",
+            title: "Delete Failed",
+            text: errorMessage,
+            footer: "Check the console for more details (F12)",
+          });
+        }
+      }
+    });
+  };
+
+  // Handle edit form change
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData({
+      ...editFormData,
+      [name]: value,
+    });
+  };
+
+  // Handle update user
+  const handleUpdateUser = async () => {
+    try {
+      const token = localStorage.getItem("admin_token");
+      const response = await axios.put(
+        `http://localhost:5008/api/admin/users/${selectedUser._id}`,
+        editFormData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      
+      setUsers(
+        users.map((user) =>
+          user._id === selectedUser._id ? response.data.user : user
+        )
+      );
+      
+      setShowEditModal(false);
+      
+      Swal.fire({
+        icon: "success",
+        title: "User Updated",
+        text: "User information has been successfully updated.",
+      });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Update Failed",
+        text: "Failed to update user information.",
+      });
+    }
+  };
+
+  // View User Modal
+  const ViewUserModal = () => {
+    if (!selectedUser) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-xl p-6 m-4 max-w-xl w-full">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">User Details</h2>
+            <button
+              onClick={() => setShowViewModal(false)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              &times;
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <p className="text-gray-600 font-medium">Name</p>
+              <p className="text-gray-800">{selectedUser.name}</p>
+            </div>
+            
+            <div>
+              <p className="text-gray-600 font-medium">Email</p>
+              <p className="text-gray-800">{selectedUser.email}</p>
+            </div>
+            
+            <div>
+              <p className="text-gray-600 font-medium">Address</p>
+              <p className="text-gray-800">{selectedUser.address}</p>
+            </div>
+            
+            <div>
+              <p className="text-gray-600 font-medium">Phone</p>
+              <p className="text-gray-800">{selectedUser.phone}</p>
+            </div>
+            
+            <div>
+              <p className="text-gray-600 font-medium">Account Created</p>
+              <p className="text-gray-800">
+                {new Date(selectedUser.createdAt).toLocaleString()}
+              </p>
+            </div>
+            
+            <div>
+              <p className="text-gray-600 font-medium">Last Updated</p>
+              <p className="text-gray-800">
+                {new Date(selectedUser.updatedAt).toLocaleString()}
+              </p>
+            </div>
+            
+            <div className="pt-4 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={() => setShowViewModal(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Edit User Modal
+  const EditUserModal = () => {
+    if (!selectedUser) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-xl p-6 m-4 max-w-xl w-full">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Edit User</h2>
+            <button
+              onClick={() => setShowEditModal(false)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              &times;
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">
+                Name
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={editFormData.name}
+                onChange={handleEditFormChange}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={editFormData.email}
+                onChange={handleEditFormChange}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">
+                Address
+              </label>
+              <input
+                type="text"
+                name="address"
+                value={editFormData.address}
+                onChange={handleEditFormChange}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">
+                Phone
+              </label>
+              <input
+                type="text"
+                name="phone"
+                value={editFormData.phone}
+                onChange={handleEditFormChange}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+            </div>
+            
+            <div className="pt-4 border-t border-gray-200 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateUser}
+                className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const renderContent = () => {
@@ -459,12 +797,13 @@ const AdminDashboard = () => {
                       <th className="py-3 px-6 text-left">Address</th>
                       <th className="py-3 px-6 text-left">Phone</th>
                       <th className="py-3 px-6 text-center">Registration Date</th>
+                      <th className="py-3 px-6 text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="text-gray-600 text-sm">
                     {users.length === 0 ? (
                       <tr>
-                        <td colSpan="5" className="py-4 px-6 text-center">
+                        <td colSpan="6" className="py-4 px-6 text-center">
                           No users found
                         </td>
                       </tr>
@@ -486,6 +825,31 @@ const AdminDashboard = () => {
                           <td className="py-3 px-6 text-center">
                             {new Date(user.createdAt).toLocaleDateString()}
                           </td>
+                          <td className="py-3 px-6 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => handleViewUser(user._id)}
+                                className="text-blue-500 hover:text-blue-700"
+                                title="View Details"
+                              >
+                                <FiEye size={18} />
+                              </button>
+                              <button
+                                onClick={() => handleEditUser(user._id)}
+                                className="text-yellow-500 hover:text-yellow-700"
+                                title="Edit User"
+                              >
+                                <FiEdit size={18} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteUser(user._id)}
+                                className="text-red-500 hover:text-red-700"
+                                title="Delete User"
+                              >
+                                <FiTrash size={18} />
+                              </button>
+                            </div>
+                          </td>
                         </tr>
                       ))
                     )}
@@ -493,6 +857,12 @@ const AdminDashboard = () => {
                 </table>
               </div>
             </div>
+
+            {/* View User Modal */}
+            {showViewModal && <ViewUserModal />}
+            
+            {/* Edit User Modal */}
+            {showEditModal && <EditUserModal />}
           </div>
         );
       
@@ -697,12 +1067,3 @@ const AdminDashboard = () => {
         </div>
         
         {/* Main Content */}
-        <div className="flex-1 p-8">
-          {renderContent()}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default AdminDashboard;
