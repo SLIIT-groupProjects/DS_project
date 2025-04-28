@@ -7,8 +7,11 @@ import Swal from 'sweetalert2';
 import FMLogo from "../asserts/icons/FMLogo.png";
 import { ArrowLeftIcon } from '@heroicons/react/solid';
 
-// Update with your publishable key from .env
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+// Only use VITE_STRIPE_PUBLISHABLE_KEY for Vite projects
+const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+
+// Prevent loading Stripe with an empty key
+const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
 
 const PaymentForm = ({ amount, orderData }) => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -28,7 +31,7 @@ const PaymentForm = ({ amount, orderData }) => {
       }
 
       // Create payment intent
-      const { data: intentData } = await axios.post('http://localhost:5008/api/payment/create-payment-intent', {
+      const { data: intentData } = await axios.post('http://localhost:5009/api/payment/create-payment-intent', {
         amount
       });
 
@@ -187,6 +190,16 @@ const Payment = () => {
 
     fetchOrderDetails();
   }, [location.state, navigate, orderId]);
+
+  if (!stripeKey) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl text-red-500">
+          Stripe publishable key is missing. Please set VITE_STRIPE_PUBLISHABLE_KEY in your .env file.
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
