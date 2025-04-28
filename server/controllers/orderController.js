@@ -14,6 +14,13 @@ export const confirmOrder = async (req, res) => {
         const { address, phone, deliveryOption, scheduledDate, scheduledTime, items, paymentIntentId, orderId } = req.body;
         const customerId = req.user.id;
 
+        console.log("Received order confirmation request:", { 
+            address, phone, deliveryOption, 
+            items: items.length,
+            hasPaymentIntent: !!paymentIntentId,
+            hasOrderId: !!orderId
+        });
+
         // Only update status if orderId and paymentIntentId are present
         if (orderId && paymentIntentId) {
             try {
@@ -65,8 +72,24 @@ export const confirmOrder = async (req, res) => {
         const totalPayable = items.reduce((total, item) => 
             total + (item.price * item.quantity), 0);
 
+        console.log("Calculated total payable:", totalPayable);
+
         // Create initial order with pending status
-        const order = await Order.create({
+        let scheduledDateTime = null;
+        if (deliveryOption === "schedule" && scheduledDate && scheduledTime) {
+            try {
+                scheduledDateTime = new Date(`${scheduledDate}T${scheduledTime}`);
+                console.log("Scheduled time parsed:", scheduledDateTime);
+            } catch (dateError) {
+                console.error("Date parsing error:", dateError);
+                return res.status(400).json({
+                    message: "Invalid date or time format",
+                    error: dateError.message
+                });
+            }
+        }
+
+        const orderData = {
             customerId,
             address,
             phone,
@@ -74,26 +97,34 @@ export const confirmOrder = async (req, res) => {
             totalPayable,
             status: 'pending',
             deliveryOption,
-            scheduledTime: deliveryOption === "schedule"
-                ? new Date(`${scheduledDate}T${scheduledTime}`)
-                : null
+            scheduledTime: scheduledDateTime
+        };
+
+        console.log("Creating order with data:", orderData);
+        const order = await Order.create(orderData);
+        console.log("Order created:", order._id);
+
+        // Send a successful response before trying to clear cart and assign delivery
+        // This ensures the client gets a response even if the follow-up tasks fail
+        res.status(201).json({
+            message: "Order created successfully",
+            orderId: order._id,
+            totalPayable: order.totalPayable
         });
 
-        console.log("Order created:", order); // Log the created order
-
-        // Clear cart and assign delivery
+        // Clear cart and assign delivery in background
         try {
             const cartDeleteResult = await Cart.deleteOne({ customerId });
             console.log("Cart deletion result:", cartDeleteResult);
-            console.log("Calling handleNewOrderAssignment with orderId:", order._id);
-            await handleNewOrderAssignment(order._id);
-            console.log("handleNewOrderAssignment completed successfully");
+            
+            if (deliveryOption === "standard") {
+                console.log("Assigning delivery for order:", order._id);
+                await handleNewOrderAssignment(order._id);
+                console.log("Order assignment completed");
+            }
         } catch (cartError) {
-            console.error("Cart deletion or assignment error:", cartError);
-            return res.status(500).json({
-                message: "Error clearing cart or assigning delivery",
-                error: cartError.message
-            });
+            console.error("Post-order operations error:", cartError);
+            // Don't send error response as we've already sent a success response
         }
 
         // Respond with orderId and totalPayable so client can proceed to payment
