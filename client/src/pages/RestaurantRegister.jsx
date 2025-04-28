@@ -14,22 +14,22 @@ const RestaurantRegister = () => {
     verificationDocuments: {
       businessLicense: "",
       identityProof: "",
-      addressProof: ""
-    }
+      addressProof: "",
+    },
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
+    if (name.includes(".")) {
+      const [parent, child] = name.split(".");
       setFormData({
         ...formData,
         [parent]: {
           ...formData[parent],
-          [child]: value
-        }
+          [child]: value,
+        },
       });
     } else {
       setFormData({ ...formData, [name]: value });
@@ -47,6 +47,11 @@ const RestaurantRegister = () => {
         title: "Passwords Do Not Match",
         text: "Please make sure your passwords match.",
         confirmButtonText: "Try Again",
+        customClass: {
+          confirmButton:
+            "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
+        },
+        buttonsStyling: false,
       });
       setLoading(false);
       return;
@@ -60,7 +65,7 @@ const RestaurantRegister = () => {
           email: formData.email,
           phone: formData.phone,
           password: formData.password,
-          verificationDocuments: formData.verificationDocuments
+          verificationDocuments: formData.verificationDocuments,
         }
       );
 
@@ -69,6 +74,11 @@ const RestaurantRegister = () => {
         title: "Registration Successful!",
         text: "Your account is pending verification. You can login to check your status.",
         confirmButtonText: "Continue to Login",
+        customClass: {
+          confirmButton:
+            "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
+        },
+        buttonsStyling: false,
       }).then(() => {
         navigate("/restaurant/login");
       });
@@ -77,7 +87,9 @@ const RestaurantRegister = () => {
       Swal.fire({
         icon: "error",
         title: "Registration Failed",
-        text: error.response?.data?.message || "An error occurred during registration",
+        text:
+          error.response?.data?.message ||
+          "An error occurred during registration",
         confirmButtonText: "Try Again",
       });
     } finally {
@@ -190,8 +202,10 @@ const RestaurantRegister = () => {
           </div>
 
           <div className="pt-4 border-t">
-            <h3 className="text-lg font-semibold text-gray-700 mb-3">Verification Documents</h3>
-            
+            <h3 className="text-lg font-semibold text-gray-700 mb-3">
+              Verification Documents
+            </h3>
+
             <div className="space-y-3">
               <div>
                 <label
