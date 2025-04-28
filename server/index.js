@@ -11,6 +11,7 @@ import connectDB from "./config/db.js";
 import deliveryRoutes from "./routes/deliveryRoutes.js";
 import authDeliveryRoutes from "./routes/authDeliveryRoutes.js";
 import assignOrderRoutes from "./routes/assignOrderRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
 
 // Other Microservices Routes
 import authRoutes from "./routes/authCustomerRoutes.js";
@@ -60,12 +61,14 @@ if (service === "auth") {
 } else if (service === "order") {
     app.use("/api/orders", orderRoutes);
     app.use("/api/ratings", ratingRoutes);
+    app.use("/api/chat", chatRoutes);
     const PORT = process.env.PORT || 5005;
     app.listen(PORT, () => console.log(`Order service is running on port ${PORT}`));
 } else if (service === "delivery") {
     app.use("/api/authDelivery", authDeliveryRoutes);
     app.use("/api/delivery", deliveryRoutes);
     app.use("/api/assignOrder", assignOrderRoutes);
+    app.use("/api/chat", chatRoutes);
     const PORT = process.env.PORT || 5006;
     app.listen(PORT, () => console.log(`Delivery service is running on port ${PORT}`));
 } else if (service === "restaurant") {
