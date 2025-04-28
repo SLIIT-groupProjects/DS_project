@@ -79,7 +79,7 @@ const Navbar = () => {
                 to="/restaurant/login"
                 className="hover:text-gray-200 font-bold"
               >
-                RESTAURENT
+                RESTAURANT
               </Link>
               <Link to="/admin/login" className="hover:text-gray-200 font-bold">
                 ADMIN
