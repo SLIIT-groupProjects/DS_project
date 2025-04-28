@@ -79,12 +79,9 @@ const Navbar = () => {
                 to="/restaurant/login"
                 className="hover:text-gray-200 font-bold"
               >
-                RESTURENT
+                RESTAURENT
               </Link>
-              <Link
-                to="/admin/login"
-                className="hover:text-gray-200 font-bold"
-              >
+              <Link to="/admin/login" className="hover:text-gray-200 font-bold">
                 ADMIN
               </Link>
             </>
@@ -95,12 +92,6 @@ const Navbar = () => {
               </Link>
               <Link to="/orders" className="hover:text-gray-200 font-bold">
                 ORDERS
-              </Link>
-              <Link
-                to="/deliveryLogin"
-                className="hover:text-gray-200 font-bold"
-              >
-                DELIVERY
               </Link>
               <button
                 onClick={handleLogout}
