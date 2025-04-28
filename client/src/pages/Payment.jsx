@@ -1,11 +1,16 @@
-import { useState, useEffect } from 'react';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import axios from 'axios';
-import Swal from 'sweetalert2';
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  CardElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+import axios from "axios";
+import Swal from "sweetalert2";
 import FMLogo from "../asserts/icons/FMLogo.png";
-import { ArrowLeftIcon } from '@heroicons/react/solid';
+import { ArrowLeftIcon } from "@heroicons/react/solid";
 
 // Only use VITE_STRIPE_PUBLISHABLE_KEY for Vite projects
 const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
@@ -27,34 +32,41 @@ const PaymentForm = ({ amount, orderData }) => {
 
     try {
       if (!stripe || !elements) {
-        throw new Error('Stripe has not been initialized');
+        throw new Error("Stripe has not been initialized");
       }
 
       // Create payment intent
+<<<<<<< HEAD
       const { data: intentData } = await axios.post('http://localhost:5009/api/payment/create-payment-intent', {
         amount
       });
+=======
+      const { data: intentData } = await axios.post(
+        "http://localhost:5009/api/payment/create-payment-intent",
+        {
+          amount,
+        }
+      );
+>>>>>>> 4979d0c2574515650d3734822a93022e0e01dce3
 
       if (!intentData.clientSecret) {
-        throw new Error('Could not get payment credentials');
+        throw new Error("Could not get payment credentials");
       }
 
       // Confirm card payment
-      const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(
-        intentData.clientSecret,
-        {
+      const { error: confirmError, paymentIntent } =
+        await stripe.confirmCardPayment(intentData.clientSecret, {
           payment_method: {
-            card: elements.getElement(CardElement)
-          }
-        }
-      );
+            card: elements.getElement(CardElement),
+          },
+        });
 
       if (confirmError) {
         throw new Error(confirmError.message);
       }
 
-      if (paymentIntent.status !== 'succeeded') {
-        throw new Error('Payment was not successful');
+      if (paymentIntent.status !== "succeeded") {
+        throw new Error("Payment was not successful");
       }
 
       // Add payment status and ID to order data
@@ -63,38 +75,51 @@ const PaymentForm = ({ amount, orderData }) => {
         orderId: orderData._id, // Ensure orderId is sent for updating
         paymentIntentId: paymentIntent.id,
         paymentStatus: paymentIntent.status,
-        items: orderData.items
+        items: orderData.items,
       };
 
       // This POST will update the order status to 'paid' if payment succeeded
-      console.log("Sending payment/order update to backend:", formattedOrderData);
+      console.log(
+        "Sending payment/order update to backend:",
+        formattedOrderData
+      );
       const { data: orderResponse } = await axios.post(
-        'http://localhost:5005/api/orders/confirm',
+        "http://localhost:5005/api/orders/confirm",
         formattedOrderData,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-          }
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
         }
       );
       console.log("Order response from backend:", orderResponse);
 
       await Swal.fire({
-        title: 'Success!',
-        text: 'Payment Successful and Order Placed!',
-        icon: 'success',
-        confirmButtonText: 'View Orders'
+        title: "Success!",
+        text: "Payment Successful and Order Placed!",
+        icon: "success",
+        confirmButtonText: "View Orders",
+        customClass: {
+          confirmButton:
+            "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
+        },
+        buttonsStyling: false,
       });
 
-      navigate('/orders');
-
+      navigate("/orders");
     } catch (err) {
       setError(err.message);
       Swal.fire({
-        title: 'Payment Failed',
+        title: "Payment Failed",
         text: err.message,
-        icon: 'error'
+        icon: "error",
+        confirmButtonText: "OK",
+        customClass: {
+          confirmButton:
+            "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
+        },
+        buttonsStyling: false,
       });
     } finally {
       setIsProcessing(false);
@@ -108,19 +133,19 @@ const PaymentForm = ({ amount, orderData }) => {
   return (
     <form onSubmit={handleSubmit} className="max-w-md mx-auto">
       <div className="mb-4">
-        <CardElement 
-          className="p-4 border rounded-lg shadow-sm" 
+        <CardElement
+          className="p-4 border rounded-lg shadow-sm"
           options={{
             style: {
               base: {
-                fontSize: '16px',
-                color: '#424770',
-                '::placeholder': {
-                  color: '#aab7c4',
+                fontSize: "16px",
+                color: "#424770",
+                "::placeholder": {
+                  color: "#aab7c4",
                 },
               },
               invalid: {
-                color: '#9e2146',
+                color: "#9e2146",
               },
             },
             hidePostalCode: true,
@@ -128,12 +153,12 @@ const PaymentForm = ({ amount, orderData }) => {
         />
       </div>
       {error && <div className="text-red-500 mb-4">{error}</div>}
-      <button 
-        type="submit" 
+      <button
+        type="submit"
         disabled={isProcessing || !stripe}
         className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
       >
-        {isProcessing ? 'Processing...' : `Pay Rs. ${amount}.00`}
+        {isProcessing ? "Processing..." : `Pay Rs. ${amount}.00`}
       </button>
     </form>
   );
@@ -146,17 +171,20 @@ const Payment = () => {
   const [orderData, setOrderData] = useState(null);
   const [amount, setAmount] = useState(null);
   const [searchParams] = useSearchParams();
-  const orderId = searchParams.get('orderId');
+  const orderId = searchParams.get("orderId");
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
         if (orderId) {
-          const response = await axios.get(`http://localhost:5005/api/orders/${orderId}`, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`
+          const response = await axios.get(
+            `http://localhost:5005/api/orders/${orderId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
             }
-          });
+          );
 
           setOrderData(response.data);
           setAmount(response.data.totalPayable);
@@ -167,23 +195,23 @@ const Payment = () => {
           setIsLoading(false);
         } else {
           Swal.fire({
-            title: 'Error',
-            text: 'Invalid payment details',
-            icon: 'error',
-            confirmButtonText: 'Go Back'
+            title: "Error",
+            text: "Invalid payment details",
+            icon: "error",
+            confirmButtonText: "Go Back",
           }).then(() => {
-            navigate('/checkout');
+            navigate("/checkout");
           });
         }
       } catch (error) {
         console.error("Error fetching order details:", error);
         Swal.fire({
-          title: 'Error',
-          text: 'Failed to fetch order details',
-          icon: 'error',
-          confirmButtonText: 'Go Back'
+          title: "Error",
+          text: "Failed to fetch order details",
+          icon: "error",
+          confirmButtonText: "Go Back",
         }).then(() => {
-          navigate('/checkout');
+          navigate("/checkout");
         });
       }
     };
@@ -225,10 +253,14 @@ const Payment = () => {
         </div>
 
         <div className="bg-white p-8 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold mb-6 text-center">Complete Your Payment</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">
+            Complete Your Payment
+          </h2>
           <div className="mb-6 text-center">
             <p className="text-lg">Total Amount:</p>
-            <p className="text-3xl font-bold text-orange-500">Rs. {amount}.00</p>
+            <p className="text-3xl font-bold text-orange-500">
+              Rs. {amount}.00
+            </p>
           </div>
           <Elements stripe={stripePromise}>
             <PaymentForm amount={amount} orderData={orderData} />
@@ -237,6 +269,6 @@ const Payment = () => {
       </div>
     </div>
   );
-}
+};
 
 export default Payment;

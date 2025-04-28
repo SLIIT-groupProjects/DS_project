@@ -5,7 +5,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 
 // Database Connections
-import connectDB from "./config/db.js"; // use "db.js" or "ds.js" based on actual filename
+import connectDB from "./config/db.js";
 
 // Delivery Service Routes
 import deliveryRoutes from "./routes/deliveryRoutes.js";
@@ -19,6 +19,13 @@ import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import ratingRoutes from "./routes/ratingRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
+
+// Restaurant Management Routes
+import authRestaurantRoutes from "./routes/authRestaurantRoutes.js";
+import authAdminRoutes from "./routes/authAdminRoutes.js";
+import restaurantRoutes from "./routes/restaurantRoutes.js";
+import menuItemRoutes from "./routes/menuItemRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -61,10 +68,21 @@ if (service === "auth") {
     app.use("/api/assignOrder", assignOrderRoutes);
     const PORT = process.env.PORT || 5006;
     app.listen(PORT, () => console.log(`Delivery service is running on port ${PORT}`));
+} else if (service === "restaurant") {
+    app.use("/api/authRestaurant", authRestaurantRoutes);
+    app.use("/api/restaurants", restaurantRoutes);
+    app.use("/api/menu", menuItemRoutes);
+    const PORT = process.env.PORT || 5007;
+    app.listen(PORT, () => console.log(`Restaurant service is running on port ${PORT}`));
 } else if (service === "payment") {
     app.use("/api/payment", paymentRoutes);
-    const PORT = process.env.PORT || 5008;
+    const PORT = process.env.PORT || 5009;
     app.listen(PORT, () => console.log(`Payment service is running on port ${PORT}`));
+} else if (service === "admin") {
+    app.use("/api/authAdmin", authAdminRoutes);
+    app.use("/api/admin", adminRoutes);
+    const PORT = process.env.PORT || 5008;
+    app.listen(PORT, () => console.log(`Admin service is running on port ${PORT}`));
 } else {
     console.log("❌ Invalid SERVICE_TYPE specified. Please set SERVICE_TYPE in your .env file.");
 }

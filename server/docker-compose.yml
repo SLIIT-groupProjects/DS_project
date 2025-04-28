@@ -94,6 +94,63 @@ services:
     networks:
       - backend_network
 
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    container_name: payment-service
+    environment:
+      - SERVICE_TYPE=payment
+      - PORT=5009
+    ports:
+      - "5009:5009"
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+    volumes:
+      - .:/app
+    networks:
+      - backend_network
+
+  restaurant-service:
+    build:
+      context: ./restaurant-service
+      dockerfile: Dockerfile
+    container_name: restaurant-service
+    environment:
+      - SERVICE_TYPE=restaurant
+      - PORT=5007
+    ports:
+      - "5007:5007"
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+    volumes:
+      - .:/app
+    networks:
+      - backend_network
+
+  admin-service:
+    build:
+      context: ./admin-service
+      dockerfile: Dockerfile
+    container_name: admin-service
+    environment:
+      - SERVICE_TYPE=admin
+      - PORT=5008
+    ports:
+      - "5008:5008"
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+    volumes:
+      - .:/app
+    networks:
+      - backend_network
+
   mongo:
     image: mongo:latest
     container_name: mongo_db
