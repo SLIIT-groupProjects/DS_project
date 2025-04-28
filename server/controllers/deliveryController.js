@@ -208,13 +208,30 @@ export const completeOrder = async (req, res) => {
         order.status = 'delivered';
         await order.save();
 
-        //await Order.findByIdAndUpdate(order.orderId, { status: 'delivered' });
+        // Update main order - using the same approach as in markOrderAsPickedUp
+        try {
+            const mongoose = require('mongoose');
+            const { ObjectId } = mongoose.Types;
 
+            let mainOrderId;
+            try {
+                // Handle orderId whether it's already an ObjectId or a string
+                mainOrderId = typeof order.orderId === 'string' ? new ObjectId(order.orderId) : order.orderId;
+            } catch (convErr) {
+                return res.status(200).json({
+                    message: 'Order delivered, but could not update main order',
+                    order
+                });
+            }
 
-        const mainOrder = await Order.findById(order.orderId);
-        if (mainOrder) {
-            mainOrder.status = 'delivered';
-            await mainOrder.save();
+            const mainOrder = await Order.findById(mainOrderId);
+            if (mainOrder) {
+                mainOrder.status = 'delivered';
+                await mainOrder.save();
+            }
+        } catch (err) {
+            // Continue without failing if main order update fails
+            console.error('Error updating main order:', err);
         }
 
         res.status(200).json({ message: 'Order marked as delivered', order });
