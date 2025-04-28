@@ -1,5 +1,48 @@
 import MenuItem from "../models/MenuItem.js";
 import Restaurant from "../models/Restaurant.js";
+import Food from "../models/Food.js"; // Add Food model import
+
+// Helper function to sync menu item with food collection
+const syncWithFoodCollection = async (menuItem, restaurant, operation) => {
+    try {
+        if (operation === "create" || operation === "update") {
+            // Only create/update in Food collection if menu item is available
+            if (menuItem.isAvailable) {
+                // Check if corresponding food item exists
+                let food = await Food.findOne({ menuItemId: menuItem._id });
+                
+                if (food) {
+                    // Update existing food item
+                    food.name = menuItem.name;
+                    food.restaurant = restaurant.name;
+                    food.price = menuItem.price;
+                    food.sizes = menuItem.sizes;
+                    food.imageUrl = menuItem.imageUrl;
+                    await food.save();
+                } else {
+                    // Create new food item
+                    food = new Food({
+                        name: menuItem.name,
+                        restaurant: restaurant.name,
+                        price: menuItem.price,
+                        sizes: menuItem.sizes,
+                        imageUrl: menuItem.imageUrl,
+                        menuItemId: menuItem._id // Store reference to menu item
+                    });
+                    await food.save();
+                }
+            } else {
+                // If menu item is not available, remove from Food collection
+                await Food.findOneAndDelete({ menuItemId: menuItem._id });
+            }
+        } else if (operation === "delete") {
+            // Remove from Food collection when menu item is deleted
+            await Food.findOneAndDelete({ menuItemId: menuItem._id });
+        }
+    } catch (error) {
+        console.error("Error syncing with Food collection:", error);
+    }
+};
 
 // Add a new menu item
 export const addMenuItem = async (req, res) => {
@@ -36,6 +79,9 @@ export const addMenuItem = async (req, res) => {
         });
         
         await menuItem.save();
+        
+        // Sync with Food collection if available
+        await syncWithFoodCollection(menuItem, restaurant, "create");
         
         res.status(201).json({
             message: "Menu item added successfully",
@@ -106,6 +152,9 @@ export const updateMenuItem = async (req, res) => {
         
         await menuItem.save();
         
+        // Sync with Food collection
+        await syncWithFoodCollection(menuItem, restaurant, "update");
+        
         res.status(200).json({
             message: "Menu item updated successfully",
             menuItem
@@ -127,8 +176,8 @@ export const deleteMenuItem = async (req, res) => {
             return res.status(404).json({ message: "Restaurant not found" });
         }
         
-        // Find and delete menu item
-        const menuItem = await MenuItem.findOneAndDelete({
+        // Find menu item
+        const menuItem = await MenuItem.findOne({
             _id: id,
             restaurant: restaurant._id
         });
@@ -136,6 +185,12 @@ export const deleteMenuItem = async (req, res) => {
         if (!menuItem) {
             return res.status(404).json({ message: "Menu item not found" });
         }
+        
+        // Sync with Food collection before deletion
+        await syncWithFoodCollection(menuItem, restaurant, "delete");
+        
+        // Delete menu item
+        await MenuItem.deleteOne({ _id: id });
         
         res.status(200).json({
             message: "Menu item deleted successfully"
@@ -171,6 +226,9 @@ export const updateMenuItemAvailability = async (req, res) => {
         
         menuItem.isAvailable = isAvailable;
         await menuItem.save();
+        
+        // Sync with Food collection
+        await syncWithFoodCollection(menuItem, restaurant, "update");
         
         res.status(200).json({
             message: `Menu item is now ${isAvailable ? 'available' : 'unavailable'}`,

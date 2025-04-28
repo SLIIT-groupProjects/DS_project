@@ -223,13 +223,23 @@ const RestaurantDashboard = () => {
               </div>
             )}
             
+            {/* Dashboard overview section */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h3 className="text-xl font-semibold mb-2">Menu Items</h3>
                 <p className="text-3xl font-bold text-orange-500">{menuItems.length}</p>
                 <p className="text-gray-500 mt-2">Total menu items</p>
+                <div className="mt-2 flex justify-between items-center text-sm">
+                  <span className="text-green-600">
+                    {menuItems.filter(item => item.isAvailable).length} visible to customers
+                  </span>
+                  <span className="text-red-600">
+                    {menuItems.filter(item => !item.isAvailable).length} hidden
+                  </span>
+                </div>
               </div>
               
+              {/* Keep other dashboard cards */}
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h3 className="text-xl font-semibold mb-2">Orders</h3>
                 <p className="text-3xl font-bold text-orange-500">{orders.length}</p>
@@ -242,6 +252,9 @@ const RestaurantDashboard = () => {
                   <span className={`inline-block w-3 h-3 rounded-full mr-2 ${restaurant?.isAvailable ? 'bg-green-500' : 'bg-red-500'}`}></span>
                   <p className="text-xl font-medium">{restaurant?.isAvailable ? 'Available' : 'Unavailable'}</p>
                 </div>
+                <p className="text-gray-500 mt-2">
+                  {restaurant?.isAvailable ? 'Customers can see your restaurant' : 'Restaurant hidden from customers'}
+                </p>
                 <button 
                   onClick={toggleRestaurantAvailability}
                   className="mt-4 bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition-colors duration-300"
@@ -340,12 +353,22 @@ const RestaurantDashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {menuItems.map(item => (
                   <div key={item._id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                    <div className="h-48 overflow-hidden">
+                    <div className="h-48 overflow-hidden relative">
                       <img 
                         src={item.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image'} 
                         alt={item.name} 
                         className="w-full h-full object-cover transform hover:scale-105 transition duration-500"
                       />
+                      {/* Add badge to clearly show if item is visible to customers */}
+                      {item.isAvailable ? (
+                        <div className="absolute top-3 left-3 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                          Visible to Customers
+                        </div>
+                      ) : (
+                        <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                          Hidden from Customers
+                        </div>
+                      )}
                     </div>
                     <div className="p-4">
                       <div className="flex justify-between items-start mb-2">
@@ -385,12 +408,12 @@ const RestaurantDashboard = () => {
                           {item.isAvailable ? (
                             <>
                               <FiToggleRight className="mr-1" size={16} />
-                              Mark Unavailable
+                              Hide from Customers
                             </>
                           ) : (
                             <>
                               <FiToggleLeft className="mr-1" size={16} />
-                              Mark Available
+                              Show to Customers
                             </>
                           )}
                         </button>
