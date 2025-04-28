@@ -18,6 +18,7 @@ import foodRoutes from "./routes/foodRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import ratingRoutes from "./routes/ratingRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
 
 // Restaurant Management Routes
 import authRestaurantRoutes from "./routes/authRestaurantRoutes.js";
@@ -73,6 +74,10 @@ if (service === "auth") {
     app.use("/api/menu", menuItemRoutes);
     const PORT = process.env.PORT || 5007;
     app.listen(PORT, () => console.log(`Restaurant service is running on port ${PORT}`));
+} else if (service === "payment") {
+    app.use("/api/payment", paymentRoutes);
+    const PORT = process.env.PORT || 5009;
+    app.listen(PORT, () => console.log(`Payment service is running on port ${PORT}`));
 } else if (service === "admin") {
     app.use("/api/authAdmin", authAdminRoutes);
     app.use("/api/admin", adminRoutes);

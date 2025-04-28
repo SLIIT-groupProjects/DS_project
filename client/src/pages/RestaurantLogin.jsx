@@ -28,13 +28,21 @@ const RestaurantLogin = () => {
       );
 
       localStorage.setItem("restaurant_token", response.data.token);
-      localStorage.setItem("restaurant_user", JSON.stringify(response.data.user));
+      localStorage.setItem(
+        "restaurant_user",
+        JSON.stringify(response.data.user)
+      );
 
       Swal.fire({
         icon: "success",
         title: "Login Successful!",
         text: "Welcome to your restaurant dashboard!",
         confirmButtonText: "Continue",
+        customClass: {
+          confirmButton:
+            "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
+        },
+        buttonsStyling: false,
       }).then(() => {
         navigate("/restaurant/dashboard");
       });
@@ -45,6 +53,11 @@ const RestaurantLogin = () => {
         title: "Login Failed",
         text: error.response?.data?.message || "An error occurred during login",
         confirmButtonText: "Try Again",
+        customClass: {
+          confirmButton:
+            "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
+        },
+        buttonsStyling: false,
       });
     } finally {
       setLoading(false);
