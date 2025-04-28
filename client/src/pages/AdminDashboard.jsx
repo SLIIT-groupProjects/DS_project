@@ -235,7 +235,7 @@ const AdminDashboard = () => {
                             {restaurant.name}
                           </td>
                           <td className="py-3 px-6 text-left">
-                            {restaurant.owner.name}
+                            {restaurant.owner?.name || 'No owner assigned'}
                           </td>
                           <td className="py-3 px-6 text-left">
                             {restaurant.email}

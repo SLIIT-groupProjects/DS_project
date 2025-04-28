@@ -63,6 +63,28 @@ const RestaurantLogin = () => {
         </h2>
       </div>
 
+      {/* Back button positioned between navbar and login form */}
+      <div className="w-full max-w-md mb-4 flex justify-start">
+        <Link 
+          to="/login" 
+          className="flex items-center text-orange-500 hover:text-orange-600 font-medium"
+        >
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            className="h-5 w-5 mr-1" 
+            viewBox="0 0 20 20" 
+            fill="currentColor"
+          >
+            <path 
+              fillRule="evenodd" 
+              d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" 
+              clipRule="evenodd" 
+            />
+          </svg>
+          Back to Home
+        </Link>
+      </div>
+
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>

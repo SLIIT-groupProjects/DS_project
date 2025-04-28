@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
 import FMLogo from "../asserts/icons/FMLogo.png";
+import { FiArrowLeft } from "react-icons/fi"; // Import back arrow icon
 
 const AdminLogin = () => {
   const [formData, setFormData] = useState({
@@ -61,6 +62,16 @@ const AdminLogin = () => {
         <h2 className="font-roboto text-xl font-semibold text-gray-700 mt-2">
           Admin Panel Login
         </h2>
+      </div>
+      
+      <div className="mb-4 w-full max-w-md">
+        <button
+          onClick={() => navigate("/login")}
+          className="flex items-center text-orange-500 hover:text-orange-700"
+        >
+          <FiArrowLeft className="mr-2" />
+          Back to Home
+        </button>
       </div>
 
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
