@@ -32,7 +32,7 @@ const DeliveryDashboard = () => {
 
       if (resAssigned.ok && resNearby.ok) {
         setAssignedOrders(dataAssigned.orders);
-        const nearby = dataNearby.orders.filter((o) => o.status === "pending");
+        const nearby = dataNearby.orders.filter((o) => o.status === "paid");
         setOrders(nearby);
         reverseGeocodeAll([...dataAssigned.orders, ...nearby]);
       }
@@ -49,7 +49,7 @@ const DeliveryDashboard = () => {
       const data = await res.json();
 
       if (res.ok) {
-        const nearby = data.orders.filter((o) => o.status === "pending");
+        const nearby = data.orders.filter((o) => o.status === "paid");
         setOrders(nearby);
 
         // Refresh addresses only for nearby + already assigned
