@@ -3,6 +3,7 @@ import Swal from "sweetalert2";
 import { reverseGeocode } from "../../../server/utils/reverseGeoCode";
 import Chat from "../components/Chat.jsx";
 import { FiMessageSquare } from "react-icons/fi";
+import DeliveryNavbar from "../components/DeliveryNavbar.jsx";
 
 // Remove this line if you don't have dayjs installed:
 // import dayjs from "dayjs";
@@ -229,6 +230,7 @@ const DeliveryDashboard = () => {
 
   return (
     <div className="min-h-screen bg-orange-200 py-8 px-4">
+      <DeliveryNavbar />
       <div className="max-w-5xl mx-auto">
         <h1 className="text-3xl font-bold mb-6 text-center">
           Delivery Dashboard
