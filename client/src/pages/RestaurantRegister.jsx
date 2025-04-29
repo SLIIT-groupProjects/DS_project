@@ -122,6 +122,7 @@ const RestaurantRegister = () => {
               type="text"
               id="name"
               name="name"
+              placeholder="Enter Name"
               value={formData.name}
               onChange={handleChange}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
@@ -140,6 +141,7 @@ const RestaurantRegister = () => {
               type="email"
               id="email"
               name="email"
+              placeholder="Enter Email"
               value={formData.email}
               onChange={handleChange}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
@@ -158,6 +160,7 @@ const RestaurantRegister = () => {
               type="tel"
               id="phone"
               name="phone"
+              placeholder="Enter Phone Number"
               value={formData.phone}
               onChange={handleChange}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
@@ -176,6 +179,7 @@ const RestaurantRegister = () => {
               type="password"
               id="password"
               name="password"
+              placeholder="Create Password"
               value={formData.password}
               onChange={handleChange}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
@@ -194,6 +198,7 @@ const RestaurantRegister = () => {
               type="password"
               id="confirmPassword"
               name="confirmPassword"
+              placeholder="Confirm Password"
               value={formData.confirmPassword}
               onChange={handleChange}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
