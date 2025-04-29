@@ -67,7 +67,7 @@ const AdminLogin = () => {
       <div className="mb-4 w-full max-w-md">
         <button
           onClick={() => navigate("/login")}
-          className="flex items-center text-orange-500 hover:text-orange-700"
+          className="flex items-center text-orange-500 hover:text-orange-700 font-semibold"
         >
           <FiArrowLeft className="mr-2" />
           Back to Home
