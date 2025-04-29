@@ -19,7 +19,16 @@ const orderSchema = new mongoose.Schema({
     scheduledTime: { type: Date, default: null },
     rating: { type: Number, min: 1, max: 5 },
     review: { type: String },
-    isRated: { type: Boolean, default: false }
+    isRated: { type: Boolean, default: false },
+    paymentIntentId: {
+        type: String,
+        default: null
+    },
+    paymentStatus: {
+        type: String,
+        enum: ['pending', 'paid', 'succeeded', 'failed', 'canceled'], // Optional but good
+        default: 'pending'
+    }
 }, { timestamps: true });
 
 export default mongoose.model("Order", orderSchema);

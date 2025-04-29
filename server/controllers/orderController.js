@@ -14,8 +14,8 @@ export const confirmOrder = async (req, res) => {
         const { address, phone, deliveryOption, scheduledDate, scheduledTime, items, paymentIntentId, orderId } = req.body;
         const customerId = req.user.id;
 
-        console.log("Received order confirmation request:", { 
-            address, phone, deliveryOption, 
+        console.log("Received order confirmation request:", {
+            address, phone, deliveryOption,
             items: items.length,
             hasPaymentIntent: !!paymentIntentId,
             hasOrderId: !!orderId
@@ -34,13 +34,23 @@ export const confirmOrder = async (req, res) => {
                         console.log(`Updating order status to 'paid' for orderId: ${orderId}`);
                         const updatedOrder = await Order.findByIdAndUpdate(
                             orderId,
-                            { status: 'paid' },
+                            {
+                                status: 'paid',
+                                paymentIntentId: paymentIntent.id, // <-- SAVE the paymentIntentId
+                                paymentStatus: paymentIntent.status // (optional but useful for future)
+                            },
                             { new: true }
                         );
                         console.log("Order status updated to paid in database:", updatedOrder);
 
+                        if (updatedOrder.deliveryOption === "standard") {
+                            console.log("Assigning delivery for PAID order:", updatedOrder._id);
+                            await handleNewOrderAssignment(updatedOrder._id);
+                            console.log("Order assignment completed after payment");
+                        }
+
                         return res.status(200).json({
-                            message: "Order status updated to paid",
+                            message: "Order status updated to paid and assigned",
                             orderId: updatedOrder._id,
                             status: updatedOrder.status,
                             totalPayable: updatedOrder.totalPayable
@@ -69,7 +79,7 @@ export const confirmOrder = async (req, res) => {
         }
 
         // Otherwise, create initial order with pending status (no paymentIntentId)
-        const totalPayable = items.reduce((total, item) => 
+        const totalPayable = items.reduce((total, item) =>
             total + (item.price * item.quantity), 0);
 
         console.log("Calculated total payable:", totalPayable);
@@ -116,12 +126,7 @@ export const confirmOrder = async (req, res) => {
         try {
             const cartDeleteResult = await Cart.deleteOne({ customerId });
             console.log("Cart deletion result:", cartDeleteResult);
-            
-            if (deliveryOption === "standard") {
-                console.log("Assigning delivery for order:", order._id);
-                await handleNewOrderAssignment(order._id);
-                console.log("Order assignment completed");
-            }
+
         } catch (cartError) {
             console.error("Post-order operations error:", cartError);
             // Don't send error response as we've already sent a success response
@@ -209,10 +214,16 @@ export const getCustomerOrders = async (req, res) => {
 
                 if (assigned) {
                     console.log(`✅ Found assigned order with status: ${assigned.status}`);
-                    if (assigned.status !== order.status) {
-                        console.log(`🔄 Updating order status from ${order.status} to ${assigned.status}`);
-                        order.status = assigned.status;
-                        await order.save();
+                    if (order.status !== "paid" && order.status !== "completed") {
+                        if (assigned.status !== order.status) {
+                            console.log(`🔄 Updating order status from ${order.status} to ${assigned.status}`);
+                            order.status = assigned.status;
+                            await order.save();
+
+                            // Ensure we include latest payment status
+                            const freshOrder = await Order.findById(order._id);
+                            orders[i] = freshOrder;
+                        }
                     }
                 } else {
                     console.log(`ℹ️ No assigned order found for order ID: ${orderIdString}`);

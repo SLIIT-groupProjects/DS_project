@@ -152,7 +152,7 @@ const Orders = () => {
                   className="absolute bottom-2 right-2 bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600"
                   onClick={() => {
                     // Navigate to payment page with order details
-                    navigate('/payment', {
+                    navigate("/payment", {
                       state: {
                         amount: order.totalPayable,
                         orderData: {
@@ -163,9 +163,9 @@ const Orders = () => {
                           scheduledTime: order.scheduledTime,
                           items: order.items,
                           customerId: order.customerId,
-                          _id: order._id
-                        }
-                      }
+                          _id: order._id,
+                        },
+                      },
                     });
                   }}
                 >
@@ -189,7 +189,10 @@ const Orders = () => {
             return (
               date.toLocaleDateString() +
               " " +
-              date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+              date.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
             );
           }}
         />

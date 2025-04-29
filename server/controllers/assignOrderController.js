@@ -56,6 +56,12 @@ export const handleNewOrderAssignment = async (orderId) => {
         const order = await Order.findById(orderId);
         if (!order) throw new Error('Order not found');
 
+        // Only assign if order is paid
+        if (order.status !== 'paid') {
+            console.log(`🚫 Skipping assignment. Order ${order._id} is not paid yet.`);
+            return;  // Don't assign unpaid orders
+        }
+
         // 1. Geocode address
         const customerLocation = await geocodeAddress(order.address);
         if (!customerLocation) throw new Error('Unable to geocode address');

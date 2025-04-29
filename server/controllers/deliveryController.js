@@ -14,15 +14,26 @@ export const getAvailableOrders = async (req, res) => {
             return res.status(404).json({ message: 'Delivery person not found' });
         }
 
-        const allOrders = await AssignedOrder.find({ status: 'pending' });
+        const allAssignedOrders = await AssignedOrder.find({ status: 'pending' });
 
-        const nearbyOrders = allOrders.filter(order => {
-            return calculateDistance(order.customerLocation, deliveryPerson.location) <= 5;
-        });
+        const filteredOrders = [];
 
-        res.status(200).json({ orders: nearbyOrders });
+        for (const assignedOrder of allAssignedOrders) {
+            const mainOrder = await Order.findById(assignedOrder.orderId);
+
+            if (mainOrder && mainOrder.status === 'paid') {
+                // Step 3: Check distance
+                const isNearby = calculateDistance(assignedOrder.customerLocation, deliveryPerson.location) <= 5;
+                if (isNearby) {
+                    filteredOrders.push(assignedOrder);
+                }
+            }
+        }
+
+        res.status(200).json({ orders: filteredOrders });
 
     } catch (err) {
+        console.error("Error in getAvailableOrders:", err);
         res.status(500).json({ message: 'Server error', error: err.message });
     }
 };
@@ -37,51 +48,76 @@ export const acceptOrder = async (req, res) => {
         }
 
         const orderId = req.params.orderId;
-        const order = await AssignedOrder.findById(orderId);
-
-        if (!order) {
-            return res.status(404).json({ message: 'Order not found' });
+        const assignedOrder = await AssignedOrder.findById(orderId);
+        if (!assignedOrder) {
+            return res.status(404).json({ message: 'Assigned Order not found' });
         }
 
-        if (order.status !== 'pending') {
-            return res.status(400).json({ message: 'Order already assigned or completed' });
+        if (assignedOrder.status !== 'pending') {
+            return res.status(400).json({ message: 'Order already assigned or accepted' });
         }
 
-        // Update the assigned order
-        order.deliveryPerson = deliveryPerson._id;
-        order.status = 'accepted';
-        await order.save();
+        assignedOrder.deliveryPerson = deliveryPerson._id;
+        assignedOrder.status = 'accepted';
+        await assignedOrder.save();
 
-        // Update the main order
-        try {
-            const mongoose = require('mongoose');
-            const { ObjectId } = mongoose.Types;
-
-            let mainOrderId;
-            try {
-                mainOrderId = new ObjectId(order.orderId);
-            } catch (convErr) {
-                return res.status(200).json({
-                    message: 'Order accepted, but could not update main order',
-                    order
-                });
-            }
-
-            const mainOrder = await Order.findById(mainOrderId);
-            if (mainOrder) {
-                mainOrder.status = 'accepted';
-                await mainOrder.save();
-            }
-        } catch (err) {
-            // Continue without failing if main order update fails
+        // ✅ Update Main Order Status
+        const mainOrder = await Order.findById(assignedOrder.orderId);
+        if (mainOrder) {
+            mainOrder.status = 'accepted';
+            await mainOrder.save();
         }
 
-        return res.status(200).json({ message: 'Order accepted and assigned', order });
-
+        res.status(200).json({ message: 'Order accepted and updated', order: assignedOrder });
     } catch (err) {
-        return res.status(500).json({ message: 'Server error', error: err.message });
+        res.status(500).json({ message: 'Server error', error: err.message });
     }
 };
+//         const order = await AssignedOrder.findById(orderId);
+
+//         if (!order) {
+//             return res.status(404).json({ message: 'Order not found' });
+//         }
+
+//         if (order.status !== 'pending') {
+//             return res.status(400).json({ message: 'Order already assigned or completed' });
+//         }
+
+//         // Update the assigned order
+//         order.deliveryPerson = deliveryPerson._id;
+//         order.status = 'accepted';
+//         await order.save();
+
+//         // Update the main order
+//         try {
+//             const mongoose = require('mongoose');
+//             const { ObjectId } = mongoose.Types;
+
+//             let mainOrderId;
+//             try {
+//                 mainOrderId = new ObjectId(order.orderId);
+//             } catch (convErr) {
+//                 return res.status(200).json({
+//                     message: 'Order accepted, but could not update main order',
+//                     order
+//                 });
+//             }
+
+//             const mainOrder = await Order.findById(mainOrderId);
+//             if (mainOrder) {
+//                 mainOrder.status = 'accepted';
+//                 await mainOrder.save();
+//             }
+//         } catch (err) {
+//             // Continue without failing if main order update fails
+//         }
+
+//         return res.status(200).json({ message: 'Order accepted and assigned', order });
+
+//     } catch (err) {
+//         return res.status(500).json({ message: 'Server error', error: err.message });
+//     }
+// };
 // export const acceptOrder = async (req, res) => {
 //     try {
 //         console.log("🔄 Starting acceptOrder with orderId:", req.params.orderId);
@@ -187,6 +223,13 @@ export const updateOrderStatus = async (req, res) => {
         order.status = status;
         await order.save();
 
+        //Sync main Order status
+        const mainOrder = await Order.findById(order.orderId);
+        if (mainOrder) {
+            mainOrder.status = status;
+            await mainOrder.save();
+        }
+
         res.status(200).json({ message: 'Order status updated', order });
 
     } catch (err) {
@@ -196,97 +239,103 @@ export const updateOrderStatus = async (req, res) => {
 
 export const completeOrder = async (req, res) => {
     try {
-        const order = await AssignedOrder.findById(req.params.orderId);
-
-        if (!order) return res.status(404).json({ message: 'Order not found' });
-
-        // Make sure this delivery person owns the order
-        if (String(order.deliveryPerson) !== String(req.user._id)) {
-            return res.status(403).json({ message: 'Unauthorized' });
+        const assignedOrder = await AssignedOrder.findById(req.params.orderId);
+        if (!assignedOrder) {
+            return res.status(404).json({ message: 'Assigned Order not found' });
         }
 
-        order.status = 'delivered';
-        await order.save();
-
-        // Update main order - using the same approach as in markOrderAsPickedUp
-        try {
-            const mongoose = require('mongoose');
-            const { ObjectId } = mongoose.Types;
-
-            let mainOrderId;
-            try {
-                // Handle orderId whether it's already an ObjectId or a string
-                mainOrderId = typeof order.orderId === 'string' ? new ObjectId(order.orderId) : order.orderId;
-            } catch (convErr) {
-                return res.status(200).json({
-                    message: 'Order delivered, but could not update main order',
-                    order
-                });
-            }
-
-            const mainOrder = await Order.findById(mainOrderId);
-            if (mainOrder) {
-                mainOrder.status = 'delivered';
-                await mainOrder.save();
-            }
-        } catch (err) {
-            // Continue without failing if main order update fails
-            console.error('Error updating main order:', err);
+        if (String(assignedOrder.deliveryPerson) !== String(req.user._id)) {
+            return res.status(403).json({ message: 'Unauthorized access' });
         }
 
-        res.status(200).json({ message: 'Order marked as delivered', order });
+        assignedOrder.status = 'delivered';
+        await assignedOrder.save();
+
+        // ✅ Update Main Order Status
+        const mainOrder = await Order.findById(assignedOrder.orderId);
+        if (mainOrder) {
+            mainOrder.status = 'delivered';
+            await mainOrder.save();
+        }
+
+        res.status(200).json({ message: 'Order marked as delivered', order: assignedOrder });
     } catch (err) {
         res.status(500).json({ message: 'Server error', error: err.message });
     }
 };
+//     try {
+//         const order = await AssignedOrder.findById(req.params.orderId);
+
+//         if (!order) return res.status(404).json({ message: 'Order not found' });
+
+//         // Make sure this delivery person owns the order
+//         if (String(order.deliveryPerson) !== String(req.user._id)) {
+//             return res.status(403).json({ message: 'Unauthorized' });
+//         }
+
+//         order.status = 'delivered';
+//         await order.save();
+
+//         // Update main order - using the same approach as in markOrderAsPickedUp
+//         try {
+//             const mongoose = require('mongoose');
+//             const { ObjectId } = mongoose.Types;
+
+//             let mainOrderId;
+//             try {
+//                 // Handle orderId whether it's already an ObjectId or a string
+//                 mainOrderId = typeof order.orderId === 'string' ? new ObjectId(order.orderId) : order.orderId;
+//             } catch (convErr) {
+//                 return res.status(200).json({
+//                     message: 'Order delivered, but could not update main order',
+//                     order
+//                 });
+//             }
+
+//             const mainOrder = await Order.findById(mainOrderId);
+//             if (mainOrder) {
+//                 mainOrder.status = 'delivered';
+//                 await mainOrder.save();
+//             }
+//         } catch (err) {
+//             // Continue without failing if main order update fails
+//             console.error('Error updating main order:', err);
+//         }
+
+//         res.status(200).json({ message: 'Order marked as delivered', order });
+//     } catch (err) {
+//         res.status(500).json({ message: 'Server error', error: err.message });
+//     }
+// };
 export const markOrderAsPickedUp = async (req, res) => {
     try {
         const { orderId } = req.params;
-
-        const order = await AssignedOrder.findById(orderId);
-        if (!order) {
-            return res.status(404).json({ message: 'Order not found' });
+        const assignedOrder = await AssignedOrder.findById(orderId);
+        if (!assignedOrder) {
+            return res.status(404).json({ message: 'Assigned Order not found' });
         }
 
-        if (String(order.deliveryPerson) !== String(req.user._id)) {
+        if (String(assignedOrder.deliveryPerson) !== String(req.user._id)) {
             return res.status(403).json({ message: 'Unauthorized access' });
         }
 
-        if (order.status !== 'accepted') {
+        if (assignedOrder.status !== 'accepted') {
             return res.status(400).json({ message: 'Order is not in accepted state' });
         }
 
-        order.status = 'pickedUp';
-        await order.save();
+        assignedOrder.status = 'pickedUp';
+        await assignedOrder.save();
 
-        // Update main order
-        try {
-            const mongoose = require('mongoose');
-            const { ObjectId } = mongoose.Types;
-
-            let mainOrderId;
-            try {
-                mainOrderId = new ObjectId(order.orderId);
-            } catch (convErr) {
-                return res.status(200).json({
-                    message: 'Order picked up, but could not update main order',
-                    order
-                });
-            }
-
-            const mainOrder = await Order.findById(mainOrderId);
-            if (mainOrder) {
-                mainOrder.status = 'pickedUp';
-                await mainOrder.save();
-            }
-        } catch (err) {
-            // Continue without failing if main order update fails
+        // ✅ Update Main Order Status
+        const mainOrder = await Order.findById(assignedOrder.orderId);
+        if (mainOrder) {
+            mainOrder.status = 'pickedUp';
+            await mainOrder.save();
         }
 
-        return res.status(200).json({ message: 'Order marked as picked up', order });
-
+        res.status(200).json({ message: 'Order marked as picked up', order: assignedOrder });
     } catch (err) {
-        return res.status(500).json({ message: 'Server error', error: err.message });
+        res.status(500).json({ message: 'Server error', error: err.message });
     }
 };
 // export const markOrderAsPickedUp = async (req, res) => {
