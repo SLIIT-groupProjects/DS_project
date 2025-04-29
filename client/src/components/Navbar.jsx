@@ -14,10 +14,14 @@ const Navbar = () => {
     // Check if user is logged in (using token) when the component mounts
     const token = localStorage.getItem("token");
     setIsLoggedIn(!!token);
-  }, []);
+  }, [location.pathname]);
 
   const isAuthPage =
-    location.pathname === "/login" || location.pathname === "/register" || location.pathname === "/deliveryLogin" || location.pathname === "/restaurant/login" || location.pathname === "/admin/login" ;
+    location.pathname === "/login" ||
+    location.pathname === "/register" ||
+    location.pathname === "/deliveryLogin" ||
+    location.pathname === "/restaurant/login" ||
+    location.pathname === "/admin/login";
 
   // Method to log out
   const handleLogout = () => {
