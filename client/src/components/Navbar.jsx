@@ -7,20 +7,17 @@ import Swal from "sweetalert2";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(null);
-  const [userRole, setUserRole] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
     // Check if user is logged in (using token) when the component mounts
     const token = localStorage.getItem("token");
-    const role = localStorage.getItem("userRole");
     setIsLoggedIn(!!token);
-    setUserRole(role);
   }, []);
 
   const isAuthPage =
-    location.pathname === "/login" || location.pathname === "/register";
+    location.pathname === "/login" || location.pathname === "/register" || location.pathname === "/deliveryLogin" || location.pathname === "/restaurant/login" || location.pathname === "/admin/login" ;
 
   // Method to log out
   const handleLogout = () => {
@@ -88,7 +85,7 @@ const Navbar = () => {
                 ADMIN
               </Link>
             </>
-          ) : isLoggedIn && userRole === 'customer' && userRole === 'delivery' && userRole === 'restaurant' && userRole === 'admin' ? (
+          ) : isLoggedIn ? (
             <>
               <Link to="/foods" className="hover:text-gray-200 font-bold">
                 HOME
@@ -109,32 +106,7 @@ const Navbar = () => {
                 <FiShoppingCart className="ml-5 text-2xl" />
               </Link>
             </>
-          ) : (
-            // All other roles (admin, restaurant, delivery) only get logout
-            <>
-              <Link to="/register" className="hover:text-gray-200 font-bold">
-                SIGN UP
-              </Link>
-              <Link to="/login" className="hover:text-gray-200 font-bold">
-                LOGIN
-              </Link>
-              <Link
-                to="/deliveryLogin"
-                className="hover:text-gray-200 font-bold"
-              >
-                DELIVERY
-              </Link>
-              <Link
-                to="/restaurant/login"
-                className="hover:text-gray-200 font-bold"
-              >
-                RESTAURENT
-              </Link>
-              <Link to="/admin/login" className="hover:text-gray-200 font-bold">
-                ADMIN
-              </Link>
-            </>
-          )}
+          ) : null}
         </div>
 
         {/* Mobile Menu Button */}
@@ -180,7 +152,7 @@ const Navbar = () => {
                 ADMIN
               </Link>
             </>
-          ) : isLoggedIn && userRole === 'customer' && userRole === 'delivery' && userRole === 'restaurant' && userRole === 'admin' ? (
+          ) : isLoggedIn ? (
             <>
               <Link
                 to="/foods"
@@ -213,32 +185,7 @@ const Navbar = () => {
                 LOGOUT
               </button>
             </>
-          ) : (
-            // All other roles (admin, restaurant, delivery) only get logout
-            <>
-              <Link to="/register" className="hover:text-gray-200 font-bold">
-                SIGN UP
-              </Link>
-              <Link to="/login" className="hover:text-gray-200 font-bold">
-                LOGIN
-              </Link>
-              <Link
-                to="/deliveryLogin"
-                className="hover:text-gray-200 font-bold"
-              >
-                DELIVERY
-              </Link>
-              <Link
-                to="/restaurant/login"
-                className="hover:text-gray-200 font-bold"
-              >
-                RESTAURENT
-              </Link>
-              <Link to="/admin/login" className="hover:text-gray-200 font-bold">
-                ADMIN
-              </Link>
-            </>
-          )}
+          ) : null}
         </div>
       )}
     </nav>
