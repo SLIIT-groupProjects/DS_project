@@ -61,7 +61,7 @@ export const acceptOrder = async (req, res) => {
         assignedOrder.status = 'accepted';
         await assignedOrder.save();
 
-        // ✅ Update Main Order Status
+        // Update Main Order Status
         const mainOrder = await Order.findById(assignedOrder.orderId);
         if (mainOrder) {
             mainOrder.status = 'accepted';
@@ -251,7 +251,7 @@ export const completeOrder = async (req, res) => {
         assignedOrder.status = 'delivered';
         await assignedOrder.save();
 
-        // ✅ Update Main Order Status
+        // Update Main Order Status
         const mainOrder = await Order.findById(assignedOrder.orderId);
         if (mainOrder) {
             mainOrder.status = 'delivered';
@@ -326,7 +326,7 @@ export const markOrderAsPickedUp = async (req, res) => {
         assignedOrder.status = 'pickedUp';
         await assignedOrder.save();
 
-        // ✅ Update Main Order Status
+        //  Update Main Order Status
         const mainOrder = await Order.findById(assignedOrder.orderId);
         if (mainOrder) {
             mainOrder.status = 'pickedUp';
