@@ -56,11 +56,11 @@ const Register = () => {
       <div className="bg-white p-8 rounded-lg shadow-lg w-[500px]">
         <h2 className="text-2xl font-bold text-center mb-6">Customer Registration</h2>
         <form onSubmit={handleSubmit}>
-          <InputField label="Name" type="text" name="name" value={formData.name} onChange={handleChange} />
-          <InputField label="Address" type="text" name="address" value={formData.address} onChange={handleChange} />
-          <InputField label="Phone" type="text" name="phone" value={formData.phone} onChange={handleChange} />
-          <InputField label="Email" type="email" name="email" value={formData.email} onChange={handleChange} />
-          <InputField label="Password" type="password" name="password" value={formData.password} onChange={handleChange} />
+          <InputField label="Name" type="text" name="name" placeholder="Enter Name" value={formData.name} onChange={handleChange} />
+          <InputField label="Address" type="text" name="address" placeholder="Enter Address" value={formData.address} onChange={handleChange} />
+          <InputField label="Phone" type="text" name="phone" placeholder="Enter Phone Number" value={formData.phone} onChange={handleChange} />
+          <InputField label="Email" type="email" name="email" placeholder="Enter Email" value={formData.email} onChange={handleChange} />
+          <InputField label="Password" type="password" name="password" placeholder="Create Password" value={formData.password} onChange={handleChange} />
           <Button text="Sign Up" type="submit" />
         </form>
         <p className="mt-4 text-center">
