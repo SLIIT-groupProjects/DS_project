@@ -41,7 +41,7 @@ const DeliveryLogin = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full mb-3 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full mb-3 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
           />
           <input
             type="password"
@@ -50,7 +50,7 @@ const DeliveryLogin = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full mb-4 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full mb-4 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
           />
           <button
             type="submit"
