@@ -52,8 +52,8 @@ const Login = () => {
       <div className="bg-white p-8 rounded-lg shadow-lg w-96">
         <h2 className="text-2xl font-bold text-center mb-6">Customer Login</h2>
         <form onSubmit={handleSubmit}>
-          <InputField label="Email" type="email" name="email" value={formData.email} onChange={handleChange} />
-          <InputField label="Password" type="password" name="password" value={formData.password} onChange={handleChange} />
+          <InputField label="Email" type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} />
+          <InputField label="Password" type="password" name="password" placeholder="Password" value={formData.password} onChange={handleChange} />
           <Button text="Login" type="submit" />
         </form>
         <p className="mt-4 text-center">
