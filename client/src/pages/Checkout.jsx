@@ -160,7 +160,10 @@ const Checkout = () => {
         title: "Error",
         text: error.response?.data?.message || "Failed to create order",
         icon: "error",
-        confirmButtonText: "Try Again!"
+        confirmButtonText: "Try Again!",
+        customClass: {
+          confirmButton: "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
+        },
       });
     }
   };

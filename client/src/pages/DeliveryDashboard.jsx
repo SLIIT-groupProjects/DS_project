@@ -1,11 +1,30 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { reverseGeocode } from "../../../server/utils/reverseGeoCode";
+import Chat from "../components/Chat.jsx";
+import { FiMessageSquare } from "react-icons/fi";
+
+// Remove this line if you don't have dayjs installed:
+// import dayjs from "dayjs";
+
+// Use JS Date for fallback if dayjs is not available
+const formatTime = (timestamp) => {
+  if (!timestamp) return "";
+  const date = new Date(timestamp);
+  return (
+    date.toLocaleDateString() +
+    " " +
+    date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  );
+};
 
 const DeliveryDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [assignedOrders, setAssignedOrders] = useState([]);
   const [orderAddresses, setOrderAddresses] = useState([]);
+
+  // Track which chat popup is open (orderId or null)
+  const [chatOrderId, setChatOrderId] = useState(null);
 
   const ACCEPTED_STORAGE_KEY = "acceptedOrders";
 
@@ -193,6 +212,10 @@ const DeliveryDashboard = () => {
     });
   };
 
+  // Helper to open chat popup for any order
+  const openChat = (orderId) => setChatOrderId(orderId);
+  const closeChat = () => setChatOrderId(null);
+
   useEffect(() => {
     fetchInitialOrders();
 
@@ -226,7 +249,7 @@ const DeliveryDashboard = () => {
                 .map((order) => (
                   <div
                     key={order._id}
-                    className="p-4 bg-white border border-orange-500 rounded-md shadow flex justify-between items-center"
+                    className="p-4 bg-white border border-orange-500 rounded-md shadow flex flex-col mb-4"
                   >
                     <div>
                       <p>
@@ -240,12 +263,22 @@ const DeliveryDashboard = () => {
                         {orderAddresses[order._id] || "Loading..."}
                       </p>
                     </div>
-                    <button
-                      onClick={() => handleComplete(order._id)}
-                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-                    >
-                      Complete
-                    </button>
+                    <div className="flex items-center gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => openChat(order.orderId)}
+                        className="flex items-center px-3 py-1 bg-orange-400 text-white rounded hover:bg-orange-500"
+                        title="Open Chat"
+                      >
+                        <FiMessageSquare className="mr-1" /> Chat
+                      </button>
+                      <button
+                        onClick={() => handleComplete(order._id)}
+                        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                      >
+                        Complete
+                      </button>
+                    </div>
                   </div>
                 ))}
             </div>
@@ -278,6 +311,16 @@ const DeliveryDashboard = () => {
                         <strong>Customer Location:</strong>{" "}
                         {orderAddresses[order._id] || "Loading..."}
                       </p>
+                      <div className="mt-2">
+                        <button
+                          type="button"
+                          onClick={() => openChat(order.orderId)}
+                          className="flex items-center px-3 py-1 bg-orange-400 text-white rounded hover:bg-orange-500"
+                          title="Open Chat"
+                        >
+                          <FiMessageSquare className="mr-1" /> Chat
+                        </button>
+                      </div>
                     </div>
                     <button
                       onClick={() => handlePickup(order._id)}
@@ -315,6 +358,16 @@ const DeliveryDashboard = () => {
                       <strong>Customer Location:</strong>{" "}
                       {orderAddresses[order._id] || "Loading..."}
                     </p>
+                    <div className="mt-2">
+                      <button
+                        type="button"
+                        onClick={() => openChat(order.orderId)}
+                        className="flex items-center px-3 py-1 bg-orange-400 text-white rounded hover:bg-orange-500"
+                        title="Open Chat"
+                      >
+                        <FiMessageSquare className="mr-1" /> Chat
+                      </button>
+                    </div>
                   </div>
                   <button
                     onClick={() => handleAccept(order._id)}
@@ -327,6 +380,63 @@ const DeliveryDashboard = () => {
             </div>
           )}
         </section>
+      </div>
+      {/* Chat Popup Modal */}
+      <SimpleModal isOpen={!!chatOrderId} onRequestClose={closeChat}>
+        <div className="flex flex-col h-[500px]">
+          <div className="flex justify-between items-center bg-orange-500 text-white px-4 py-2 rounded-t">
+            <span className="font-bold">Order Chat</span>
+            <button onClick={closeChat} className="text-white text-xl">
+              &times;
+            </button>
+          </div>
+          {chatOrderId && (
+            <Chat
+              orderId={chatOrderId}
+              sender="delivery"
+              isPopup
+              formatTime={formatTime}
+              onClose={closeChat}
+            />
+          )}
+        </div>
+      </SimpleModal>
+    </div>
+  );
+};
+
+// Add SimpleModal component
+const SimpleModal = ({ isOpen, onRequestClose, children }) => {
+  if (!isOpen) return null;
+  return (
+    <div
+      style={{
+        zIndex: 1000,
+        position: "fixed",
+        left: 0,
+        top: 0,
+        width: "100vw",
+        height: "100vh",
+        background: "rgba(0,0,0,0.3)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+      onClick={onRequestClose}
+    >
+      <div
+        style={{
+          maxWidth: 400,
+          width: "100%",
+          background: "#fff",
+          borderRadius: 10,
+          boxShadow: "0 4px 24px rgba(0,0,0,0.2)",
+          padding: 0,
+          position: "relative",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {children}
       </div>
     </div>
   );

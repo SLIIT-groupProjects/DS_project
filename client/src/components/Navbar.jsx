@@ -136,6 +136,21 @@ const Navbar = () => {
               >
                 LOGIN
               </Link>
+              <Link
+                to="/deliveryLogin"
+                className="hover:text-gray-200 font-bold"
+              >
+                DELIVERY
+              </Link>
+              <Link
+                to="/restaurant/login"
+                className="hover:text-gray-200 font-bold"
+              >
+                RESTAURENT
+              </Link>
+              <Link to="/admin/login" className="hover:text-gray-200 font-bold">
+                ADMIN
+              </Link>
             </>
           ) : isLoggedIn ? (
             <>
@@ -152,13 +167,6 @@ const Navbar = () => {
                 onClick={() => setIsOpen(false)}
               >
                 ORDERS
-              </Link>
-              <Link
-                to="/payments"
-                className="hover:text-gray-200 font-bold"
-                onClick={() => setIsOpen(false)}
-              >
-                PAYMENTS
               </Link>
               <Link
                 to="/cart"

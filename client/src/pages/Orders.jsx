@@ -3,9 +3,12 @@ import axios from "axios";
 import { Trash } from "lucide-react";
 import FMLogo from "../asserts/icons/FMLogo.png";
 import { useNavigate } from "react-router-dom";
+import Chat from "../components/Chat.jsx";
+import { FiMessageSquare } from "react-icons/fi";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
+  const [chatOrderId, setChatOrderId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -127,6 +130,17 @@ const Orders = () => {
                 </span>
               </div>
 
+              {/* Add Chat for this order */}
+              <div className="mt-4">
+                <button
+                  className="flex items-center px-3 py-1 bg-orange-400 text-white rounded hover:bg-orange-500"
+                  onClick={() => setChatOrderId(order._id)}
+                  type="button"
+                >
+                  <FiMessageSquare className="mr-1" /> Chat
+                </button>
+              </div>
+
               <button
                 className="absolute top-2 right-2 text-orange-500 hover:text-red-700"
                 onClick={() => deleteOrder(order._id)}
@@ -138,7 +152,7 @@ const Orders = () => {
                   className="absolute bottom-2 right-2 bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600"
                   onClick={() => {
                     // Navigate to payment page with order details
-                    navigate('/payment', {
+                    navigate("/payment", {
                       state: {
                         amount: order.totalPayable,
                         orderData: {
@@ -149,9 +163,9 @@ const Orders = () => {
                           scheduledTime: order.scheduledTime,
                           items: order.items,
                           customerId: order.customerId,
-                          _id: order._id
-                        }
-                      }
+                          _id: order._id,
+                        },
+                      },
                     });
                   }}
                 >
@@ -161,6 +175,27 @@ const Orders = () => {
             </div>
           ))}
         </div>
+      )}
+      {/* Popup Chat */}
+      {chatOrderId && (
+        <Chat
+          orderId={chatOrderId}
+          sender="user"
+          isPopup
+          onClose={() => setChatOrderId(null)}
+          formatTime={(timestamp) => {
+            if (!timestamp) return "";
+            const date = new Date(timestamp);
+            return (
+              date.toLocaleDateString() +
+              " " +
+              date.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            );
+          }}
+        />
       )}
       <br />
     </div>
