@@ -266,7 +266,7 @@ const DeliveryDashboard = () => {
                     <div className="flex items-center gap-2 mt-2">
                       <button
                         type="button"
-                        onClick={() => openChat(order._id)}
+                        onClick={() => openChat(order.orderId)}
                         className="flex items-center px-3 py-1 bg-orange-400 text-white rounded hover:bg-orange-500"
                         title="Open Chat"
                       >
@@ -314,7 +314,7 @@ const DeliveryDashboard = () => {
                       <div className="mt-2">
                         <button
                           type="button"
-                          onClick={() => openChat(order._id)}
+                          onClick={() => openChat(order.orderId)}
                           className="flex items-center px-3 py-1 bg-orange-400 text-white rounded hover:bg-orange-500"
                           title="Open Chat"
                         >
@@ -361,7 +361,7 @@ const DeliveryDashboard = () => {
                     <div className="mt-2">
                       <button
                         type="button"
-                        onClick={() => openChat(order._id)}
+                        onClick={() => openChat(order.orderId)}
                         className="flex items-center px-3 py-1 bg-orange-400 text-white rounded hover:bg-orange-500"
                         title="Open Chat"
                       >
@@ -386,7 +386,9 @@ const DeliveryDashboard = () => {
         <div className="flex flex-col h-[500px]">
           <div className="flex justify-between items-center bg-orange-500 text-white px-4 py-2 rounded-t">
             <span className="font-bold">Order Chat</span>
-            <button onClick={closeChat} className="text-white text-xl">&times;</button>
+            <button onClick={closeChat} className="text-white text-xl">
+              &times;
+            </button>
           </div>
           {chatOrderId && (
             <Chat

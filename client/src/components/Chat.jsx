@@ -1,13 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
 
-const API_URL = "http://localhost:5005/api/chat"; // or 5006 for delivery, adjust as needed
+const API_URL = "http://localhost:5006/api/chat"; // or 5006 for delivery, adjust as needed
 
-function Chat({ orderId, sender, bubble, formatTime, isPopup = false, onClose }) {
+function Chat({
+  orderId,
+  sender,
+  bubble,
+  formatTime,
+  isPopup = false,
+  onClose,
+}) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
   const messagesEndRef = useRef(null);
   const prevMessagesLength = useRef(0);
+
+  const actualSender = sender === "user" ? "customer" : sender;
 
   useEffect(() => {
     if (!orderId) return;
@@ -107,9 +116,31 @@ function Chat({ orderId, sender, bubble, formatTime, isPopup = false, onClose })
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f59e42", color: "#fff", borderTopLeftRadius: 10, borderTopRightRadius: 10, padding: "12px 16px"}}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "#f59e42",
+                color: "#fff",
+                borderTopLeftRadius: 10,
+                borderTopRightRadius: 10,
+                padding: "12px 16px",
+              }}
+            >
               <span className="font-bold">Order Chat</span>
-              <button onClick={onClose} className="text-white text-xl" style={{background: "none", border: "none", fontSize: 24, cursor: "pointer"}}>&times;</button>
+              <button
+                onClick={onClose}
+                className="text-white text-xl"
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: 24,
+                  cursor: "pointer",
+                }}
+              >
+                &times;
+              </button>
             </div>
             {/* ...existing chat UI below... */}
             <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
@@ -122,42 +153,74 @@ function Chat({ orderId, sender, bubble, formatTime, isPopup = false, onClose })
                   style={{
                     display: "flex",
                     flexDirection: "column",
-                    alignItems: msg.sender === sender ? "flex-end" : "flex-start",
+                    alignItems:
+                      msg.sender === actualSender ? "flex-end" : "flex-start",
                     marginBottom: 8,
                   }}
                 >
                   <div
                     style={{
-                      background: msg.sender === sender ? "#f59e42" : "#eee",
-                      color: msg.sender === sender ? "#fff" : "#333",
+                      background:
+                        msg.sender === actualSender ? "#f59e42" : "#eee",
+                      color: msg.sender === actualSender ? "#fff" : "#333",
                       borderRadius: 16,
                       padding: "8px 14px",
                       maxWidth: "80%",
                       wordBreak: "break-word",
-                      alignSelf: msg.sender === sender ? "flex-end" : "flex-start",
+                      alignSelf:
+                        msg.sender === actualSender ? "flex-end" : "flex-start",
                       boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
                     }}
                   >
                     <span style={{ fontWeight: 600, fontSize: 12 }}>
-                      {msg.sender === "delivery" ? "You" : msg.sender === "customer" ? "Customer" : msg.sender}
+                      {msg.sender === actualSender
+                        ? "You"
+                        : msg.sender === "delivery"
+                        ? "Delivery"
+                        : "Customer"}
                     </span>
                     <div style={{ fontSize: 15 }}>{msg.message}</div>
                   </div>
                   <span style={{ fontSize: 11, color: "#888", marginTop: 2 }}>
-                    {formatTime ? formatTime(msg.timestamp || msg.createdAt) : ""}
+                    {formatTime
+                      ? formatTime(msg.timestamp || msg.createdAt)
+                      : ""}
                   </span>
                 </div>
               ))}
               <div ref={messagesEndRef} />
             </div>
-            <form onSubmit={sendMessage} style={{ display: "flex", borderTop: "1px solid #eee", padding: 8 }}>
+            <form
+              onSubmit={sendMessage}
+              style={{
+                display: "flex",
+                borderTop: "1px solid #eee",
+                padding: 8,
+              }}
+            >
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                style={{ flex: 1, border: "none", outline: "none", padding: 8, fontSize: 15 }}
+                style={{
+                  flex: 1,
+                  border: "none",
+                  outline: "none",
+                  padding: 8,
+                  fontSize: 15,
+                }}
                 placeholder="Type a message..."
               />
-              <button type="submit" style={{ marginLeft: 8, background: "#f59e42", color: "#fff", border: "none", borderRadius: 6, padding: "0 16px" }}>
+              <button
+                type="submit"
+                style={{
+                  marginLeft: 8,
+                  background: "#f59e42",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 6,
+                  padding: "0 16px",
+                }}
+              >
                 Send
               </button>
             </form>
@@ -165,7 +228,18 @@ function Chat({ orderId, sender, bubble, formatTime, isPopup = false, onClose })
         </div>
       ) : (
         // ...existing inline chat UI...
-        <div style={{ border: "1px solid #ccc", padding: 0, width: 350, background: "#fff", borderRadius: 8, height: "100%", display: "flex", flexDirection: "column" }}>
+        <div
+          style={{
+            border: "1px solid #ccc",
+            padding: 0,
+            width: 350,
+            background: "#fff",
+            borderRadius: 8,
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
           <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
             {error && (
               <div style={{ color: "red", marginBottom: 8 }}>{error}</div>
@@ -176,24 +250,31 @@ function Chat({ orderId, sender, bubble, formatTime, isPopup = false, onClose })
                 style={{
                   display: "flex",
                   flexDirection: "column",
-                  alignItems: msg.sender === sender ? "flex-end" : "flex-start",
+                  alignItems:
+                    msg.sender === actualSender ? "flex-end" : "flex-start",
                   marginBottom: 8,
                 }}
               >
                 <div
                   style={{
-                    background: msg.sender === sender ? "#f59e42" : "#eee",
-                    color: msg.sender === sender ? "#fff" : "#333",
+                    background:
+                      msg.sender === actualSender ? "#f59e42" : "#eee",
+                    color: msg.sender === actualSender ? "#fff" : "#333",
                     borderRadius: 16,
                     padding: "8px 14px",
                     maxWidth: "80%",
                     wordBreak: "break-word",
-                    alignSelf: msg.sender === sender ? "flex-end" : "flex-start",
+                    alignSelf:
+                      msg.sender === actualSender ? "flex-end" : "flex-start",
                     boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
                   }}
                 >
                   <span style={{ fontWeight: 600, fontSize: 12 }}>
-                    {msg.sender === "delivery" ? "You" : msg.sender === "customer" ? "Customer" : msg.sender}
+                    {msg.sender === actualSender
+                      ? "You"
+                      : msg.sender === "delivery"
+                      ? "Delivery"
+                      : "Customer"}
                   </span>
                   <div style={{ fontSize: 15 }}>{msg.message}</div>
                 </div>
@@ -204,14 +285,33 @@ function Chat({ orderId, sender, bubble, formatTime, isPopup = false, onClose })
             ))}
             <div ref={messagesEndRef} />
           </div>
-          <form onSubmit={sendMessage} style={{ display: "flex", borderTop: "1px solid #eee", padding: 8 }}>
+          <form
+            onSubmit={sendMessage}
+            style={{ display: "flex", borderTop: "1px solid #eee", padding: 8 }}
+          >
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              style={{ flex: 1, border: "none", outline: "none", padding: 8, fontSize: 15 }}
+              style={{
+                flex: 1,
+                border: "none",
+                outline: "none",
+                padding: 8,
+                fontSize: 15,
+              }}
               placeholder="Type a message..."
             />
-            <button type="submit" style={{ marginLeft: 8, background: "#f59e42", color: "#fff", border: "none", borderRadius: 6, padding: "0 16px" }}>
+            <button
+              type="submit"
+              style={{
+                marginLeft: 8,
+                background: "#f59e42",
+                color: "#fff",
+                border: "none",
+                borderRadius: 6,
+                padding: "0 16px",
+              }}
+            >
               Send
             </button>
           </form>
