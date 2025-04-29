@@ -12,6 +12,7 @@ export const registerUser = async (formData) => {
   return await axios.post(`${API_URL}/auth/register`, formData);
 };
 
-export const fetchFoods = async () => {
-  return await axios.get(`http://localhost:5003/api/foods`);
+// Fetch all available food items
+export const fetchFoods = () => {
+    return axios.get("http://localhost:5003/api/foods");
 };

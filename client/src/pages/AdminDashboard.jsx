@@ -2,15 +2,17 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { FiUsers, FiShoppingBag, FiCheckCircle, FiXCircle, FiDollarSign, FiLogOut, FiRefreshCw } from "react-icons/fi";
+import { FiUsers, FiShoppingBag, FiCheckCircle, FiXCircle, FiDollarSign, FiLogOut, FiRefreshCw, FiTruck } from "react-icons/fi";
 
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState("restaurants");
   const [restaurants, setRestaurants] = useState([]);
+  const [users, setUsers] = useState([]);
   const [restaurantOwners, setRestaurantOwners] = useState([]);
   const [pendingVerifications, setPendingVerifications] = useState([]);
-  const [users, setUsers] = useState([]);
   const [transactions, setTransactions] = useState([]);
+  const [admins, setAdmins] = useState([]);
+  const [deliveryPersons, setDeliveryPersons] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -18,7 +20,7 @@ const AdminDashboard = () => {
     document.title = "FOOD MART | Admin Dashboard";
     checkAuthentication();
     fetchData();
-  }, []);
+  }, [activeSection]);
 
   const checkAuthentication = () => {
     const token = localStorage.getItem("admin_token");
@@ -27,40 +29,76 @@ const AdminDashboard = () => {
     }
   };
 
+  // Fetch data based on active section
   const fetchData = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("admin_token");
-      
-      const [restaurantsRes, ownersRes, pendingRes, usersRes, transactionsRes] = await Promise.all([
-        axios.get("http://localhost:5008/api/admin/restaurants", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get("http://localhost:5008/api/admin/restaurant-owners", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get("http://localhost:5008/api/admin/pending-verifications", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get("http://localhost:5008/api/admin/users", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get("http://localhost:5008/api/admin/transactions", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
+      if (!token) {
+        navigate("/admin/login");
+        return;
+      }
 
-      setRestaurants(restaurantsRes.data);
-      setRestaurantOwners(ownersRes.data);
-      setPendingVerifications(pendingRes.data);
-      setUsers(usersRes.data);
-      setTransactions(transactionsRes.data);
+      let endpoint;
+      switch (activeSection) {
+        case "restaurants":
+          endpoint = "http://localhost:5008/api/admin/restaurants";
+          const restaurantsResponse = await axios.get(endpoint, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setRestaurants(restaurantsResponse.data);
+          break;
+        case "users":
+          endpoint = "http://localhost:5008/api/admin/users";
+          const usersResponse = await axios.get(endpoint, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setUsers(usersResponse.data);
+          break;
+        case "restaurantOwners":
+          endpoint = "http://localhost:5008/api/admin/restaurant-owners";
+          const ownersResponse = await axios.get(endpoint, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setRestaurantOwners(ownersResponse.data);
+          break;
+        case "deliveryPersons":
+          endpoint = "http://localhost:5008/api/admin/delivery-persons";
+          const deliveryResponse = await axios.get(endpoint, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setDeliveryPersons(deliveryResponse.data);
+          break;
+        case "verifications":
+          endpoint = "http://localhost:5008/api/admin/pending-verifications";
+          const pendingResponse = await axios.get(endpoint, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setPendingVerifications(pendingResponse.data);
+          break;
+        case "transactions":
+          endpoint = "http://localhost:5008/api/admin/transactions";
+          const transactionsResponse = await axios.get(endpoint, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setTransactions(transactionsResponse.data);
+          break;
+        case "admins":
+          endpoint = "http://localhost:5008/api/admin/admins";
+          const adminsResponse = await axios.get(endpoint, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setAdmins(adminsResponse.data);
+          break;
+        default:
+          break;
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
       Swal.fire({
         icon: "error",
-        title: "Failed to Load Data",
-        text: "There was an error loading the dashboard data.",
+        title: "Error",
+        text: "Failed to fetch data",
       });
     } finally {
       setLoading(false);
@@ -594,6 +632,74 @@ const AdminDashboard = () => {
           </div>
         );
       
+      case "deliveryPersons":
+        return (
+          <div>
+            <AdminActions />
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Delivery Person Management</h2>
+              <button
+                onClick={fetchData}
+                className="flex items-center text-orange-500 hover:text-orange-700 transition-colors duration-200"
+              >
+                <FiRefreshCw className="mr-2" />
+                Refresh
+              </button>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-white">
+                  <thead>
+                    <tr className="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                      <th className="py-3 px-6 text-left">Name</th>
+                      <th className="py-3 px-6 text-left">Email</th>
+                      <th className="py-3 px-6 text-left">Phone</th>
+                      <th className="py-3 px-6 text-left">Location</th>
+                      <th className="py-3 px-6 text-left">Status</th>
+                      <th className="py-3 px-6 text-center">Registration Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {deliveryPersons.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="text-center py-4">
+                          No delivery persons found
+                        </td>
+                      </tr>
+                    ) : (
+                      deliveryPersons.map((person) => (
+                        <tr key={person._id} className="border-b border-gray-200 hover:bg-gray-50">
+                          <td className="py-3 px-6 text-left">
+                            {person.name}
+                          </td>
+                          <td className="py-3 px-6 text-left">
+                            {person.email}
+                          </td>
+                          <td className="py-3 px-6 text-left">
+                            {person.phone}
+                          </td>
+                          <td className="py-3 px-6 text-left">
+                            {`Lat: ${person.location.lat.toFixed(4)}, Lng: ${person.location.lng.toFixed(4)}`}
+                          </td>
+                          <td className="py-3 px-6 text-left">
+                            <span className={`px-2 py-1 rounded-full text-xs ${person.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                              {person.isAvailable ? 'Available' : 'Unavailable'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-6 text-center">
+                            {new Date(person.createdAt).toLocaleDateString()}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+      
       default:
         return <div>Invalid section</div>;
     }
@@ -669,6 +775,19 @@ const AdminDashboard = () => {
                   <FiUsers className="mr-3" />
                   Customers
                 </button>
+              </li>
+              <li>
+                <button
+                    onClick={() => setActiveSection("deliveryPersons")}
+                    className={`w-full flex items-center px-4 py-2 rounded-md transition-colors duration-200 ${
+                      activeSection === "deliveryPersons"
+                        ? "bg-orange-500 text-white"
+                        : "hover:bg-gray-700"
+                    }`}
+                  >
+                    <FiTruck className="mr-3" />
+                    Delivery Persons
+                  </button>
               </li>
               <li>
                 <button

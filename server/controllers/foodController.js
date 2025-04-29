@@ -27,10 +27,11 @@ export const addFood = async (req, res) => {
 // Retrieve food items
 export const getFoods = async (req, res) => {
     try{
+        // Fetch all food items (they should already be filtered by availability in the sync process)
         const foods = await Food.find();
         res.status(200).json(foods);
     }catch(error){
-        res.status(500).json({ message:  "Error retrieving food items", error});
+        res.status(500).json({ message: "Error retrieving food items", error});
     }
 };
 

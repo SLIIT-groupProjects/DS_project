@@ -7,7 +7,8 @@ const foodSchema = new mongoose.Schema({
     reviews: {type: Number, default: 0},
     sold: {type: Number, default: 0},
     sizes: {type: [String], enum: ["Regular", "Large"], default: ["Regular", "Large"]},
-    imageUrl: { type: String, required: true }
+    imageUrl: { type: String, required: true },
+    menuItemId: { type: mongoose.Schema.Types.ObjectId, ref: "MenuItem" } // Add reference to MenuItem
 }, {timestamps: true});
 
 export default mongoose.model("Food", foodSchema);
