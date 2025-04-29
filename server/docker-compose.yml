@@ -1,0 +1,169 @@
+services:
+  auth-service:
+    build:
+      context: ./auth-service # context is the current folder, i.e., 'server'
+      dockerfile: Dockerfile # Dockerfile is inside auth-service
+    container_name: auth-service
+    environment:
+      - SERVICE_TYPE=auth
+      - PORT=5002
+    ports:
+      - "5002:5002"
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+    volumes:
+      - .:/app
+    networks:
+      - backend_network
+
+  food-service:
+    build:
+      context: ./food-service # context is the current folder (server)
+      dockerfile: Dockerfile # Dockerfile inside food-service
+    container_name: food-service
+    environment:
+      - SERVICE_TYPE=food
+      - PORT=5003
+    ports:
+      - "5003:5003"
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+    volumes:
+      - .:/app
+    networks:
+      - backend_network
+
+  cart-service:
+    build:
+      context: ./cart-service # context is the current folder (server)
+      dockerfile: Dockerfile # Dockerfile inside food-service
+    container_name: cart-service
+    environment:
+      - SERVICE_TYPE=cart
+      - PORT=5004
+    ports:
+      - "5004:5004"
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+    volumes:
+      - .:/app
+    networks:
+      - backend_network
+
+  order-service:
+    build:
+      context: ./order-service # context is the current folder (server)
+      dockerfile: Dockerfile # Dockerfile inside food-service
+    container_name: order-service
+    environment:
+      - SERVICE_TYPE=order
+      - PORT=5005
+    ports:
+      - "5005:5005"
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+    volumes:
+      - .:/app
+    networks:
+      - backend_network
+
+  delivery-service:
+    build:
+      context: ./delivery-service
+      dockerfile: Dockerfile
+    container_name: delivery-service
+    environment:
+      - SERVICE_TYPE=delivery
+      - PORT=5006
+    ports:
+      - "5006:5006"
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+    volumes:
+      - .:/app
+    networks:
+      - backend_network
+
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    container_name: payment-service
+    environment:
+      - SERVICE_TYPE=payment
+      - PORT=5009
+    ports:
+      - "5009:5009"
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+    volumes:
+      - .:/app
+    networks:
+      - backend_network
+
+  restaurant-service:
+    build:
+      context: ./restaurant-service
+      dockerfile: Dockerfile
+    container_name: restaurant-service
+    environment:
+      - SERVICE_TYPE=restaurant
+      - PORT=5007
+    ports:
+      - "5007:5007"
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+    volumes:
+      - .:/app
+    networks:
+      - backend_network
+
+  admin-service:
+    build:
+      context: ./admin-service
+      dockerfile: Dockerfile
+    container_name: admin-service
+    environment:
+      - SERVICE_TYPE=admin
+      - PORT=5008
+    ports:
+      - "5008:5008"
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+    volumes:
+      - .:/app
+    networks:
+      - backend_network
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo_db
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - backend_network
+
+networks:
+  backend_network:
+
+volumes:
+  mongo_data:
