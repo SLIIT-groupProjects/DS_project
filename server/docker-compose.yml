@@ -1,7 +1,7 @@
 services:
   auth-service:
     build:
-      context: ./food-service # context is the current folder, i.e., 'server'
+      context: ./auth-service # context is the current folder, i.e., 'server'
       dockerfile: Dockerfile # Dockerfile is inside auth-service
     container_name: auth-service
     environment:
@@ -20,7 +20,7 @@ services:
 
   food-service:
     build:
-      context: ./auth-service # context is the current folder (server)
+      context: ./food-service # context is the current folder (server)
       dockerfile: Dockerfile # Dockerfile inside food-service
     container_name: food-service
     environment:
