@@ -109,50 +109,139 @@ const Checkout = () => {
         icon: "error",
         confirmButtonText: "Okay",
         customClass: {
-          confirmButton: "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
+          confirmButton:
+            "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
         },
         buttonsStyling: false,
       });
       return;
     }
-
+  
     const orderData = {
       address: customer.address,
       phone: customer.phone,
       deliveryOption,
       scheduledDate,
       scheduledTime,
-      items: cart.items.map(item => ({
+      items: cart.items.map((item) => ({
         name: item.name,
         price: item.price,
         size: item.size,
-        quantity: item.quantity
-      }))
+        quantity: item.quantity,
+      })),
     };
-
+  
     try {
-      // Create order with pending status (no paymentIntentId)
       const token = localStorage.getItem("token");
-      const { data } = await axios.post(
+      const response = await axios.post(
         "http://localhost:5005/api/orders/confirm",
         orderData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
+            "Content-Type": "application/json",
+          },
         }
       );
-
-      // Navigate to payment with order data from backend
-      navigate('/payment', {
-        state: {
-          amount: data.totalPayable,
-          orderData: {
-            ...orderData,
-            _id: data.orderId // Pass the created order's ID
+  
+      const orderId = response.data.orderId;
+      const totalPayable = response.data.totalPayable;
+  
+      Swal.fire({
+        title: "Rate Our Service!",
+        html: `
+          <div class="star-rating text-gray-400 cursor-pointer text-4xl">
+            <span class="star" data-value="1">★</span>
+            <span class="star" data-value="2">★</span>
+            <span class="star" data-value="3">★</span>
+            <span class="star" data-value="4">★</span>
+            <span class="star" data-value="5">★</span>
+          </div>
+        `,
+        showCancelButton: true,
+        cancelButtonText: "Skip for now",
+        confirmButtonText: "Submit",
+        customClass: {
+          confirmButton:
+            "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
+          cancelButton:
+            "w-[400px] bg-red-400 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
+        },
+        didOpen: () => {
+          const stars = document.querySelectorAll(".star");
+          stars.forEach((star) => {
+            star.addEventListener("click", () => {
+              const rating = star.getAttribute("data-value");
+              stars.forEach((s) => s.classList.remove("text-yellow-500"));
+              for (let i = 0; i < rating; i++) {
+                stars[i].classList.add("text-yellow-500");
+              }
+              // Set a custom attribute to remember the selected rating
+              document
+                .querySelector(".star-rating")
+                .setAttribute("data-selected", rating);
+            });
+          });
+        },
+      }).then(async (result) => {
+        const selectedRating = document
+          .querySelector(".star-rating")
+          ?.getAttribute("data-selected");
+        const rating = selectedRating || 5;
+  
+        let review = "";
+  
+        if (selectedRating) {
+          const reviewResult = await Swal.fire({
+            title: "Review About Us!",
+            input: "textarea",
+            inputPlaceholder: "Type your review...",
+            showCancelButton: true,
+            cancelButtonText: "Skip for now",
+            confirmButtonText: "Okay",
+            customClass: {
+              confirmButton:
+                "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
+              cancelButton:
+                "w-[400px] bg-red-400 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
+            },
+          });
+  
+          if (reviewResult.isConfirmed) {
+            review = reviewResult.value || "";
           }
+  
+          await axios.put(
+            `http://localhost:5005/api/orders/${orderId}/rating`,
+            { rating, review },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
         }
+  
+        Swal.fire({
+          title: "Success!",
+          text: "Order is confirmed successfully!",
+          icon: "success",
+          confirmButtonText: "Okay",
+          customClass: {
+            confirmButton:
+              "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
+          },
+        }).then(() => {
+          navigate("/payment", {
+            state: {
+              amount: totalPayable,
+              orderData: {
+                ...orderData,
+                _id: orderId,
+              },
+            },
+          });
+        });
       });
     } catch (error) {
       console.error("Error creating order:", error.response?.data || error);
@@ -162,11 +251,12 @@ const Checkout = () => {
         icon: "error",
         confirmButtonText: "Try Again!",
         customClass: {
-          confirmButton: "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
+          confirmButton:
+            "w-[400px] bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300",
         },
       });
     }
-  };
+  }; 
 
   return (
     <div className="pt-20 container mx-auto p-6 max-w-5xl">
